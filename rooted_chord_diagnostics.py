@@ -19,10 +19,20 @@ from scipy.stats import spearmanr
 import article_setup
 from diagnostic_vocabulary import VOCABULARY
 from leadsheetanalyser.constants import W_PYTHAGOREAN
-from leadsheetanalyser.chord_dissimilarities import dissimilarities
+from leadsheetanalyser.chord_dissimilarities import reinterpret_chord, modal_embedding
 from leadsheetanalyser.chords import chord_to_pitch_classes
 
 WD = np.asarray(W_PYTHAGOREAN, float)
+
+def dissimilarities(chord1, chord2, W):
+    r1, k1 = chord1
+    r2, k2 = chord2
+    k1_r2 = reinterpret_chord(k1, r1, r2)
+    k2_r1 = reinterpret_chord(k2, r2, r1)
+    d1 = np.linalg.norm(modal_embedding(k1_r2, W) - modal_embedding(k2, W))
+    d2 = np.linalg.norm(modal_embedding(k2_r1, W) - modal_embedding(k1, W))
+    return min(d1, d2), max(d1, d2), d1 + d2
+
 
 # 240 rooted chords: (root, kind vector), plus each one's pitch-class set.
 chords, pcs = [], []
