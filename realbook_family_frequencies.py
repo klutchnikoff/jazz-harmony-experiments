@@ -10,11 +10,11 @@ from collections import Counter
 
 import pandas as pd
 
-from article_setup import PACKAGE_ROOT
+from article_setup import DATA_ROOT
 from diagnostic_vocabulary import FAMILY_ORDER, VOCABULARY
 
 
-DATA = PACKAGE_ROOT / "data" / "music_realbook.pkl"
+DATA = DATA_ROOT / "music_realbook.pkl"
 KIND_TO_FAMILY = {
     tuple(kind): family
     for _, kind, family in VOCABULARY

@@ -30,17 +30,17 @@ from figure_style import (
     paired_heatmap_axes,
     save_article_figure,
 )
-from leadsheetanalyser.constants import W_PYTHAGOREAN, PYTHAGOREAN_MODE_NAMES
+from leadsheetanalyser.constants import W_DIATONIC, DIATONIC_MODE_NAMES
 
 OUT = output_directory()
 
-WD = np.asarray(W_PYTHAGOREAN, float)
+WD = np.asarray(W_DIATONIC, float)
 SUPPORT = (WD > 0).astype(float)
 W_UNIFORM = SUPPORT / SUPPORT.sum(axis=1, keepdims=True)
 
 # display order: brightest to darkest (as in the paper's Table 3)
 BRIGHT = ["Lydian", "Ionian", "Mixolydian", "Dorian", "Aeolian", "Phrygian", "Locrian"]
-order = [PYTHAGOREAN_MODE_NAMES.index(m) for m in BRIGHT]
+order = [DIATONIC_MODE_NAMES.index(m) for m in BRIGHT]
 
 from diagnostic_vocabulary import FAMILY_ORDER
 
@@ -127,7 +127,7 @@ unique = {"W_D": 0, "uniform": 0}
 for kind_name, expected in CHORD_SCALE:
     cells = {}
     for label, W in (("W_D", WD), ("uniform", W_UNIFORM)):
-        names = [PYTHAGOREAN_MODE_NAMES[i] for i in maxima(W @ BY_NAME[kind_name])]
+        names = [DIATONIC_MODE_NAMES[i] for i in maxima(W @ BY_NAME[kind_name])]
         cells[label] = names
         if expected in names:
             agreed[label] += 1

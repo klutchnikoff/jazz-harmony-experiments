@@ -16,11 +16,11 @@ import numpy as np
 
 import article_setup  # noqa: F401
 from leadsheetanalyser.constants import (
-    W_MESSIAEN, MESSIAEN_MODE_NAMES, W_PYTHAGOREAN, PYTHAGOREAN_MODE_NAMES,
+    W_MESSIAEN, MESSIAEN_MODE_NAMES, W_DIATONIC, DIATONIC_MODE_NAMES,
 )
 
 WM = np.asarray(W_MESSIAEN, float)
-WD = np.asarray(W_PYTHAGOREAN, float)
+WD = np.asarray(W_DIATONIC, float)
 
 # (name, interval vector over semitones 1..11, transposition period in semitones)
 KINDS = [
@@ -44,6 +44,6 @@ print(f"\n  W_L home of the augmented triad:   "
 print(f"  W_L home of the diminished seventh: "
       f"{MESSIAEN_MODE_NAMES[int(np.argmax(WM @ np.asarray(KINDS[1][1], float)))]}")
 print(f"  under W_D their best diatonic modes are only "
-      f"{PYTHAGOREAN_MODE_NAMES[int(np.argmax(WD @ np.asarray(KINDS[0][1], float)))]} "
-      f"and {PYTHAGOREAN_MODE_NAMES[int(np.argmax(WD @ np.asarray(KINDS[1][1], float)))]}, "
+      f"{DIATONIC_MODE_NAMES[int(np.argmax(WD @ np.asarray(KINDS[0][1], float)))]} "
+      f"and {DIATONIC_MODE_NAMES[int(np.argmax(WD @ np.asarray(KINDS[1][1], float)))]}, "
       f"at affinities well below 1.")

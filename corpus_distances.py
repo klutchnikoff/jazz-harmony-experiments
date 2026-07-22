@@ -37,15 +37,14 @@ import ot
 import jams
 import pandas as pd
 
-from article_setup import ARTICLE_ROOT, PACKAGE_ROOT
+from article_setup import DATA_ROOT, cache_directory
 from leadsheetanalyser.chords import map_chord
-from leadsheetanalyser.constants import W_PYTHAGOREAN, NOTE_TO_PC
+from leadsheetanalyser.constants import W_DIATONIC, NOTE_TO_PC
 
-DATA = PACKAGE_ROOT / "data"
-CACHE_DIR = ARTICLE_ROOT / "tmp"
-CACHE_DIR.mkdir(exist_ok=True)
+DATA = DATA_ROOT
+CACHE_DIR = cache_directory()
 
-WD = np.asarray(W_PYTHAGOREAN, dtype=float)
+WD = np.asarray(W_DIATONIC, dtype=float)
 BORROWED_DEGREES = {3, 8, 10}  # bIII, bVI, bVII relative to the tonic
 MIN_CHORDS = 3
 
@@ -101,7 +100,7 @@ def load_real_book():
     if "duration_progression" not in df.columns:
         raise RuntimeError(
             "music_realbook.pkl carries no durations; regenerate it with "
-            "leadsheetanalyser/final-examples/process_realbook.py"
+            "leadsheetanalyser/scripts/build_corpus.py"
         )
     songs, titles, ids, n_minor = [], [], [], 0
     for _, row in df.iterrows():

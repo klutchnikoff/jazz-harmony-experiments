@@ -25,14 +25,13 @@ import numpy as np
 import pandas as pd
 
 import article_setup  # noqa: F401
-from article_setup import PACKAGE_ROOT
+from article_setup import DATA_ROOT
 from diagnostic_vocabulary import VOCABULARY, FAMILY_ORDER
 from figure_style import HEATMAP_CMAP
-from leadsheetanalyser.constants import W_PYTHAGOREAN, PYTHAGOREAN_MODE_NAMES
+from leadsheetanalyser.constants import W_DIATONIC, DIATONIC_MODE_NAMES
 
-from article_setup import ARTICLE_ROOT
-OUT = sys.argv[1] if len(sys.argv) > 1 else str(ARTICLE_ROOT / "tmp")
-(ARTICLE_ROOT / "tmp").mkdir(exist_ok=True)
+from article_setup import cache_directory
+OUT = sys.argv[1] if len(sys.argv) > 1 else str(cache_directory())
 
 CELL = 0.30          # inches; the article's 0.4125 is too tall for 20 rows
 LEFT_LABELS = 1.05
@@ -41,11 +40,11 @@ TOP = 0.45
 GAP = 0.28
 CBAR_PAD, CBAR_W = 0.14, 0.10
 
-WD = np.asarray(W_PYTHAGOREAN, float)
+WD = np.asarray(W_DIATONIC, float)
 SUPPORT = (WD > 0).astype(float)
 W_UNIFORM = SUPPORT / SUPPORT.sum(axis=1, keepdims=True)
 BRIGHT = ["Lydian", "Ionian", "Mixolydian", "Dorian", "Aeolian", "Phrygian", "Locrian"]
-ORDER = [PYTHAGOREAN_MODE_NAMES.index(m) for m in BRIGHT]
+ORDER = [DIATONIC_MODE_NAMES.index(m) for m in BRIGHT]
 SHORT = ["Lyd", "Ion", "Mix", "Dor", "Aeo", "Phr", "Loc"]
 
 PANELS = ((WD, r"theory-guided $W_D$"), (W_UNIFORM, "uniform on the same supports"))
@@ -120,7 +119,7 @@ draw(kinds, labels, breaks, "affinities_vocab_transposed",
      "diagnostic vocabulary, grouped by intervallic family")
 
 # --- variant 2: the 20 most frequent kinds --------------------------------
-df = pd.read_pickle(PACKAGE_ROOT / "data" / "music_realbook.pkl")
+df = pd.read_pickle(DATA_ROOT / "music_realbook.pkl")
 counts = Counter()
 for prog in df["chord_progression"]:
     for c in prog:

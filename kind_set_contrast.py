@@ -20,15 +20,15 @@ import numpy as np
 import pandas as pd
 
 import article_setup  # noqa: F401
-from article_setup import PACKAGE_ROOT
+from article_setup import DATA_ROOT
 from diagnostic_vocabulary import VOCABULARY
-from leadsheetanalyser.constants import W_PYTHAGOREAN, PYTHAGOREAN_MODE_NAMES
+from leadsheetanalyser.constants import W_DIATONIC, DIATONIC_MODE_NAMES
 
-WD = np.asarray(W_PYTHAGOREAN, float)
+WD = np.asarray(W_DIATONIC, float)
 SUPPORT = (WD > 0).astype(float)
 W_UNIFORM = SUPPORT / SUPPORT.sum(axis=1, keepdims=True)
 BRIGHT = ["Lydian", "Ionian", "Mixolydian", "Dorian", "Aeolian", "Phrygian", "Locrian"]
-order = [PYTHAGOREAN_MODE_NAMES.index(m) for m in BRIGHT]
+order = [DIATONIC_MODE_NAMES.index(m) for m in BRIGHT]
 
 VOCAB_NAME = {tuple(k): n for n, k, _ in VOCABULARY}
 FUNKY = {"Cmaj7", "C7", "Cmi7", "Cmi7b5", "Cmi6"}
@@ -47,7 +47,7 @@ def contrast(kinds, label):
     print(f"  {label:38s} W_D {u_wd:2d}/{len(kinds)}   uniform {u_un:2d}/{len(kinds)}")
 
 
-df = pd.read_pickle(PACKAGE_ROOT / "data" / "music_realbook.pkl")
+df = pd.read_pickle(DATA_ROOT / "music_realbook.pkl")
 counts = Counter()
 for prog in df["chord_progression"]:
     for c in prog:

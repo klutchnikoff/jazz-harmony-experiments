@@ -40,7 +40,7 @@ from figure_style import (
     annotated_heatmap_axes,
     save_article_figure,
 )
-from leadsheetanalyser.constants import W_PYTHAGOREAN
+from leadsheetanalyser.constants import W_DIATONIC
 from leadsheetanalyser.chord_dissimilarities import reinterpret_chord, modal_embedding
 
 def dissimilarities(chord1, chord2, W):
@@ -53,7 +53,7 @@ def dissimilarities(chord1, chord2, W):
     return min(d1, d2), max(d1, d2), d1 + d2
 
 OUT = output_directory()
-WD = np.asarray(W_PYTHAGOREAN, dtype=float)
+WD = np.asarray(W_DIATONIC, dtype=float)
 
 # "Funky" in its annotated key of B-flat major, in functional order.
 CHORDS = [

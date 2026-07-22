@@ -32,10 +32,10 @@ from math import gcd
 import numpy as np
 
 import article_setup  # noqa: F401  (puts the package on sys.path)
-from leadsheetanalyser.constants import W_PYTHAGOREAN
+from leadsheetanalyser.constants import W_DIATONIC
 
 # Ten times the weights, so that every entry is an integer.
-WD = (np.asarray(W_PYTHAGOREAN, dtype=float) * 10).round().astype(int)
+WD = (np.asarray(W_DIATONIC, dtype=float) * 10).round().astype(int)
 assert WD.shape == (7, 11)
 
 # Table 3 of the article, ordered from brightest to darkest.

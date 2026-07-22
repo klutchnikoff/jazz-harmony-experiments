@@ -18,11 +18,11 @@ from scipy.stats import spearmanr
 
 import article_setup
 from diagnostic_vocabulary import VOCABULARY
-from leadsheetanalyser.constants import W_PYTHAGOREAN
+from leadsheetanalyser.constants import W_DIATONIC
 from leadsheetanalyser.chord_dissimilarities import reinterpret_chord, modal_embedding
 from leadsheetanalyser.chords import chord_to_pitch_classes
 
-WD = np.asarray(W_PYTHAGOREAN, float)
+WD = np.asarray(W_DIATONIC, float)
 
 def dissimilarities(chord1, chord2, W):
     r1, k1 = chord1

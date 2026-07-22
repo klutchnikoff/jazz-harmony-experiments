@@ -32,10 +32,10 @@ import pandas as pd
 from music21 import chord as m21chord
 from music21 import stream
 
-from article_setup import ARTICLE_ROOT, PACKAGE_ROOT, cache_is_fresh
+from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
 from leadsheetanalyser.constants import NOTE_TO_PC
 
-OUT = ARTICLE_ROOT / "tmp" / "key_audit.csv"
+OUT = cache_directory() / "key_audit.csv"
 OUT.parent.mkdir(exist_ok=True)
 
 
@@ -79,7 +79,7 @@ def classify(annot, est):
     return "other"
 
 
-SOURCE = PACKAGE_ROOT / "data" / "music_realbook.pkl"
+SOURCE = DATA_ROOT / "music_realbook.pkl"
 
 if cache_is_fresh(OUT, SOURCE, __file__):
     audit = pd.read_csv(OUT)

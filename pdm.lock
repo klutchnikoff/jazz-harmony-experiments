@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:4501fbc91d0064186764807ced57ae6511760a22fa3c512a493bc995222801f5"
+content_hash = "sha256:9a1eef2cd720ad737a5a82118e94cdfdb789f8283c0dbdcd366bab1e86c41752"
 
 [[metadata.targets]]
 requires_python = "==3.12.*"
@@ -275,7 +275,7 @@ files = [
 
 [[package]]
 name = "leadsheetanalyser"
-version = "0.1.0"
+version = "0.2.0"
 requires_python = ">=3.10"
 summary = "A package for music analysis, chord processing, and harmonic analysis via modal systems and optimal transport"
 groups = ["default"]
@@ -291,8 +291,8 @@ dependencies = [
     "seaborn>=0.11.0",
 ]
 files = [
-    {file = "leadsheetanalyser-0.1.0-py3-none-any.whl", hash = "sha256:e54f49dd6adf9504b371126236153fb4041cfcc1c50f20d0e87b6615c3c08593"},
-    {file = "leadsheetanalyser-0.1.0.tar.gz", hash = "sha256:50ce54966abf041d804354df8c8f5ceb0ffb3ce40c20ace79663dc62b0dfb1c0"},
+    {file = "leadsheetanalyser-0.2.0-py3-none-any.whl", hash = "sha256:294ace42f2a9af2891ba7e46b97af860b93f335ce095b67ba2b5a3d1dde9ee4a"},
+    {file = "leadsheetanalyser-0.2.0.tar.gz", hash = "sha256:2dc8d6fd1d929bcd76c0dff4e187aee788fde172e3a2489bfe59234e78c082d1"},
 ]
 
 [[package]]

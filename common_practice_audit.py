@@ -31,7 +31,7 @@ import pandas as pd
 from music21 import chord as m21chord
 from music21 import stream
 
-from article_setup import ARTICLE_ROOT, PACKAGE_ROOT, cache_is_fresh
+from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
 from corpus_distances import (
     DATA, era, map_chord, normalised_tonic, _annotation, SUBDOMINANT_PULL,
 )
@@ -51,7 +51,7 @@ def estimate_key(prog):
     return k.tonic.pitchClass, k.mode, float(k.correlationCoefficient)
 
 
-OUT = ARTICLE_ROOT / "tmp" / "common_practice_audit.csv"
+OUT = cache_directory() / "common_practice_audit.csv"
 OUT.parent.mkdir(exist_ok=True)
 PC_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
 
