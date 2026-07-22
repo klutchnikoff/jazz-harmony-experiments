@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:61dcf4db700d744466a34103d322488691965f54628ac6174a0b01a9002ea463"
+content_hash = "sha256:4501fbc91d0064186764807ced57ae6511760a22fa3c512a493bc995222801f5"
 
 [[metadata.targets]]
 requires_python = "==3.12.*"
@@ -276,10 +276,7 @@ files = [
 [[package]]
 name = "leadsheetanalyser"
 version = "0.1.0"
-requires_python = ">=3.9"
-git = "https://github.com/klutchnikoff/leadsheetanalyser.git"
-ref = "v0.1.0"
-revision = "6d175ab008758ea71086def8212edcd901305e28"
+requires_python = ">=3.10"
 summary = "A package for music analysis, chord processing, and harmonic analysis via modal systems and optimal transport"
 groups = ["default"]
 dependencies = [
@@ -292,6 +289,10 @@ dependencies = [
     "pandas>=1.3.0",
     "scipy>=1.7.0",
     "seaborn>=0.11.0",
+]
+files = [
+    {file = "leadsheetanalyser-0.1.0-py3-none-any.whl", hash = "sha256:e54f49dd6adf9504b371126236153fb4041cfcc1c50f20d0e87b6615c3c08593"},
+    {file = "leadsheetanalyser-0.1.0.tar.gz", hash = "sha256:50ce54966abf041d804354df8c8f5ceb0ffb3ce40c20ace79663dc62b0dfb1c0"},
 ]
 
 [[package]]
