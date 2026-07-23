@@ -23,7 +23,7 @@ Two properties of D are visible on it, and the script prints both.
   piece: the half-diminished supertonic and the minor subdominant with added
   sixth are the same four notes.
 
-Run:  python py-code/funky_dissimilarity_matrix.py
+Run:  python funky_dissimilarity_matrix.py
 """
 
 import matplotlib

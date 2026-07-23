@@ -16,14 +16,14 @@ Each variant needs its own union distance matrix, cached in tmp/ under the
 variant name and built on demand if absent.  Building one from scratch takes on
 the order of ten minutes, so on a cold cache this script is slow; running
 
-    python py-code/build_union_distances.py --with-variants
+    python build_union_distances.py --with-variants
 
 first does the same work with clearer progress reporting.
 
 The jazz side is restricted to the key-corroborated songs, exactly as in
 mixed_corpus_mds.py, so the numbers are comparable with the rest of Section 8.
 
-Run:  python py-code/robustness_checks.py
+Run:  python robustness_checks.py
 """
 import numpy as np
 

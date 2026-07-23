@@ -5,9 +5,9 @@ by default; mixed_corpus_mds.py reads a block of it.  It
 also build it on demand, so running this script is only a convenience when one
 wants the (slow) computation done up front.
 
-    python py-code/build_union_distances.py                  # duration only
-    python py-code/build_union_distances.py --with-token     # + token weighting
-    python py-code/build_union_distances.py --with-variants  # + the three
+    python build_union_distances.py                  # duration only
+    python build_union_distances.py --with-token     # + token weighting
+    python build_union_distances.py --with-variants  # + the three
                                                              #   degraded costs
 
 The token-weighted matrix is not used by any article figure.  It is the material

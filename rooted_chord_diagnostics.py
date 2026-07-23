@@ -9,7 +9,7 @@ system W_D, compares D_min, D_max and D_sum on three criteria:
   2. near-metricity  - fraction of triples violating the triangle inequality;
   3. centrality      - Spearman rank correlation between the three measures.
 
-Run:  python py-code/rooted_chord_diagnostics.py
+Run:  python rooted_chord_diagnostics.py
 """
 import numpy as np
 from itertools import combinations

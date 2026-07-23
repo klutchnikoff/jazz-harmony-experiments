@@ -25,7 +25,7 @@ interval, and the two groups the section retains.  The distinction matters --
 an annotation and an estimate can name different tonics of the same collection,
 which for our purposes is agreement.
 
-Run:  python py-code/key_audit.py
+Run:  python key_audit.py
 """
 import numpy as np
 import pandas as pd

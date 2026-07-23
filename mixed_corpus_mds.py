@@ -23,7 +23,7 @@ being a submatrix of a matrix whose entries never depended on the other songs.
 Deliberately clustering-free: the geometry is anchored by descriptive statistics
 only.
 
-Run:  python py-code/mixed_corpus_mds.py
+Run:  python mixed_corpus_mds.py
 """
 import os
 

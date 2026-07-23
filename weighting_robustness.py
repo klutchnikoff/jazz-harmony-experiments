@@ -16,9 +16,9 @@ article figures does not require the token-weighted matrix.
 
 Both matrices must already be cached; build them with
 
-    python py-code/build_union_distances.py
+    python build_union_distances.py
 
-Run:  python py-code/weighting_robustness.py
+Run:  python weighting_robustness.py
 """
 import numpy as np
 

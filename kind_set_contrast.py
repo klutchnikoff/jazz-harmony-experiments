@@ -12,7 +12,7 @@ of the earlier figure only two.  Bare triads are the informative case, being
 modally impoverished, which is why a five-kind figure had to be foundational --
 and why showing all twenty says more than either.
 
-Run:  python py-code/kind_set_contrast.py
+Run:  python kind_set_contrast.py
 """
 from collections import Counter
 

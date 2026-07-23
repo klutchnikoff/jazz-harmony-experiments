@@ -3,7 +3,7 @@
 The denominator is the set of valid chord tokens in the 2,846-song processed
 Real Book partition used by the article.
 
-Run:  python py-code/realbook_family_frequencies.py
+Run:  python realbook_family_frequencies.py
 """
 
 from collections import Counter

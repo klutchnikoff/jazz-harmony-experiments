@@ -2,7 +2,7 @@
 
 Arguments are passed through to every script, so
 
-    python py-code/generate_all.py --force
+    python generate_all.py --force
 
 rebuilds the cached audits instead of loading them.  A per-script timing summary
 is printed at the end: without it we were guessing at where the minutes went.

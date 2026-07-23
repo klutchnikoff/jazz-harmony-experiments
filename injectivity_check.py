@@ -23,7 +23,7 @@ Note on row order: the article lists the modes by brightness (Table 3) while the
 package lists them by degree.  A row permutation changes neither the rank, nor
 the kernel, nor d_W, and the script verifies this rather than assuming it.
 
-Run:  python py-code/injectivity_check.py
+Run:  python injectivity_check.py
 """
 from fractions import Fraction as F
 from itertools import product

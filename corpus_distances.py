@@ -195,14 +195,14 @@ def key_reliable(song_ids):
     audit_path = CACHE_DIR / "key_audit.csv"
     if not audit_path.exists():
         raise RuntimeError(
-            f"{audit_path} is missing; run py-code/key_audit.py first "
+            f"{audit_path} is missing; run key_audit.py first "
             "(generate_all.py already orders it before the corpus figures)"
         )
     audit = pd.read_csv(audit_path)
     if "id" not in audit.columns:
         raise RuntimeError(
             f"{audit_path} predates the switch to stable ids; delete it and "
-            "re-run py-code/key_audit.py"
+            "re-run key_audit.py"
         )
     gap = {}
     for song_id, annotated, pc, mode in zip(audit["id"], audit["annotated"],

@@ -23,7 +23,7 @@ The second is the sharper question.  A global transposition is only meaningful
 for a work that stays put; a sonata movement whose second group sits in the
 dominant is being read, for half its length, against a tonic it has left.
 
-Run:  python py-code/common_practice_audit.py
+Run:  python common_practice_audit.py
 """
 import jams
 import numpy as np
