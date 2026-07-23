@@ -59,7 +59,7 @@ def annotated_heatmap_axes(nrows, ncols, bottom=HEATMAP_BOTTOM):
 
 
 def paired_heatmap_axes(nrows, ncols, bottom=HEATMAP_BOTTOM, gap=0.30, title=0.28,
-                        cell=HEATMAP_CELL_SIZE):
+                        cell=HEATMAP_CELL_SIZE, extra_col_width=0.0, extra_gap=None):
     """Two same-sized heat maps side by side, sharing one colour bar.
 
     Row labels are drawn on the left panel only, so the two matrices can be
@@ -68,13 +68,26 @@ def paired_heatmap_axes(nrows, ncols, bottom=HEATMAP_BOTTOM, gap=0.30, title=0.2
 
     `cell` overrides the article-wide cell size: a matrix with many rows needs
     smaller cells to stay within a page.
+
+    `extra_col_width`, if positive, adds a third, narrow axes of that width
+    (inches) and the same height as the two panels, placed between them and
+    the colour bar and sharing its scale.  Meant for a single derived column
+    that does not deserve a full panel of its own -- a 15-mode system would
+    otherwise nearly double the figure's width for one value per row.
+    `extra_gap` sets the margin between the second panel and this column
+    separately from `gap`, since a panel title wider than its own matrix
+    (e.g. "uniform on the same supports") overflows to the right and needs
+    more room to clear; defaults to `gap` if unset.
     """
+    if extra_gap is None:
+        extra_gap = gap
     matrix_width = ncols * cell
     matrix_height = nrows * cell
     figure_height = bottom + matrix_height + HEATMAP_TOP + title
     group_width = (
         2 * matrix_width
         + gap
+        + (extra_gap + extra_col_width if extra_col_width else 0)
         + HEATMAP_COLORBAR_PAD
         + HEATMAP_COLORBAR_WIDTH
     )
@@ -83,18 +96,26 @@ def paired_heatmap_axes(nrows, ncols, bottom=HEATMAP_BOTTOM, gap=0.30, title=0.2
 
     fig = plt.figure(figsize=(figure_width, figure_height))
 
-    def box(x):
+    def box(x, width=matrix_width):
         return [
             x / figure_width,
             bottom / figure_height,
-            matrix_width / figure_width,
+            width / figure_width,
             matrix_height / figure_height,
         ]
 
-    axes = [fig.add_axes(box(left)), fig.add_axes(box(left + matrix_width + gap))]
+    x = left
+    axes = [fig.add_axes(box(x))]
+    x += matrix_width + gap
+    axes.append(fig.add_axes(box(x)))
+    x += matrix_width
+    if extra_col_width:
+        x += extra_gap
+        axes.append(fig.add_axes(box(x, extra_col_width)))
+        x += extra_col_width
     cax = fig.add_axes(
         [
-            (left + 2 * matrix_width + gap + HEATMAP_COLORBAR_PAD) / figure_width,
+            (x + HEATMAP_COLORBAR_PAD) / figure_width,
             bottom / figure_height,
             HEATMAP_COLORBAR_WIDTH / figure_width,
             matrix_height / figure_height,

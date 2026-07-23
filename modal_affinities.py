@@ -14,9 +14,16 @@ carried by the outlined maxima, and the few numbers the text quotes are printed
 below.  Counting ties, 14 of the 20 kinds keep a unique most-affine mode under
 W_D against 6 under uniform weights -- the figure quoted in Section 7.2.
 
+A third, narrow column reports max_j [Phi_{W_L}(k)]_j, each kind's best affinity
+among the fifteen modes of limited transposition (Section 9.2) -- not a full
+panel, since W_L has 15 columns against W_D's 7 and a matching panel would
+nearly double the figure's width.  This is the figure Section 9.2 previously
+described in prose without showing; see messiaen_affinities.py for the numeric
+check.
+
 The script also prints the agreement with the chord-scale pairing.
 
-Run:  python py-code/modal_affinities.py
+Run:  python modal_affinities.py
 """
 import numpy as np
 import matplotlib
@@ -30,13 +37,14 @@ from figure_style import (
     paired_heatmap_axes,
     save_article_figure,
 )
-from leadsheetanalyser.constants import W_DIATONIC, DIATONIC_MODE_NAMES
+from leadsheetanalyser.constants import W_DIATONIC, DIATONIC_MODE_NAMES, W_MESSIAEN
 
 OUT = output_directory()
 
 WD = np.asarray(W_DIATONIC, float)
 SUPPORT = (WD > 0).astype(float)
 W_UNIFORM = SUPPORT / SUPPORT.sum(axis=1, keepdims=True)
+WL = np.asarray(W_MESSIAEN, float)
 
 # display order: brightest to darkest (as in the paper's Table 3)
 BRIGHT = ["Lydian", "Ionian", "Mixolydian", "Dorian", "Aeolian", "Phrygian", "Locrian"]
@@ -69,7 +77,8 @@ def maxima(row, tol=1e-9):
 
 
 nrows, ncols = len(KIND_VECTORS), len(BRIGHT)
-fig, axes, cax = paired_heatmap_axes(nrows, ncols, cell=0.22, bottom=0.5, title=0.22)
+fig, axes, cax = paired_heatmap_axes(nrows, ncols, cell=0.22, bottom=0.5, title=0.22,
+                                      extra_col_width=0.22, extra_gap=0.55)
 
 for ax, (W, title) in zip(axes, PANELS):
     P = profiles(W)
@@ -90,6 +99,24 @@ for ax, (W, title) in zip(axes, PANELS):
                 fill=False, edgecolor="red", linewidth=1.0, zorder=5))
     for b in FAMILY_BREAKS:
         ax.axhline(b - 0.5, color="0.25", linewidth=0.9, zorder=6)
+
+# Third column: each kind's best affinity among the fifteen modes of limited
+# transposition (W_L, Section 9.2), not developed until then -- see the
+# module docstring and PLAN.md sec:1.2 for why a column and not a panel.
+wl_max = np.asarray([(WL @ k).max() for k in KIND_VECTORS]).reshape(-1, 1)
+ax = axes[2]
+ax.imshow(wl_max, cmap=HEATMAP_CMAP, vmin=0, vmax=1.0, aspect=HEATMAP_ASPECT)
+ax.set_title(r"$W_L$", pad=5, fontsize=9)
+ax.set_xticks([])
+ax.set_yticks([])
+# ring the kinds that saturate: affinity 1 under W_L, the claim Section 9.2 makes
+for i in range(nrows):
+    if wl_max[i, 0] >= 1.0 - 1e-9:
+        ax.add_patch(matplotlib.patches.Rectangle(
+            (-0.5, i - 0.5), 1, 1,
+            fill=False, edgecolor="red", linewidth=1.0, zorder=5))
+for b in FAMILY_BREAKS:
+    ax.axhline(b - 0.5, color="0.25", linewidth=0.9, zorder=6)
 
 fig.colorbar(image, cax=cax, label=r"$[\Phi_{W}(k)]_j$")
 save_article_figure(fig, OUT, "modal_affinities_kinds")

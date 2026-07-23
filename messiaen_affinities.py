@@ -8,9 +8,10 @@ that W_D leaves without a home (Figure 1).  Each is itself a mode of limited
 transposition -- the augmented triad invariant under transposition by a major
 third, the diminished seventh by a minor third -- so under the Messiaen system
 W_L each saturates its own collection at the maximal affinity 1.  This script
-checks both facts; the section states them in prose and shows no figure.
+checks both facts numerically; modal_affinities.py plots the saturation as the
+third column of Figure 1.
 
-Run:  python py-code/messiaen_affinities.py
+Run:  python messiaen_affinities.py
 """
 import numpy as np
 
