@@ -13,9 +13,8 @@ Renders two variants so they can be compared:
          (what Table 2 lists and what the 14-vs-6 count is computed over)
   top20  the 20 most frequent kinds of the corpus, by token count
 
-Usage:  python py-code/_explore_transposed.py <output-directory>
+Usage:  python affinity_figure_variants.py
 """
-import sys
 from collections import Counter
 
 import matplotlib
@@ -25,13 +24,12 @@ import numpy as np
 import pandas as pd
 
 import article_setup  # noqa: F401
-from article_setup import DATA_ROOT
+from article_setup import DATA_ROOT, cache_directory
 from diagnostic_vocabulary import VOCABULARY, FAMILY_ORDER
 from figure_style import HEATMAP_CMAP
 from leadsheetanalyser.constants import W_DIATONIC, DIATONIC_MODE_NAMES
 
-from article_setup import cache_directory
-OUT = sys.argv[1] if len(sys.argv) > 1 else str(cache_directory())
+OUT = str(cache_directory())
 
 CELL = 0.30          # inches; the article's 0.4125 is too tall for 20 rows
 LEFT_LABELS = 1.05
