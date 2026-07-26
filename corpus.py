@@ -7,6 +7,8 @@ risk a silently different corpus.  Everything downstream of the loading is new.
 
 `key_reliable` reads cache/key_audit.csv, produced by key_audit.py.
 """
+from pathlib import Path
+
 import numpy as np
 import jams
 import pandas as pd
@@ -170,6 +172,12 @@ def key_reliable(song_ids):
         raise RuntimeError(
             f"{audit_path} is missing; run key_audit.py first "
             "(generate_all.py already orders it before the corpus figures)"
+        )
+    producer = Path(__file__).resolve().parent / "key_audit.py"
+    if producer.exists() and producer.stat().st_mtime > audit_path.stat().st_mtime:
+        raise RuntimeError(
+            f"{audit_path} is older than key_audit.py; re-run key_audit.py, "
+            "or the filter below rests on a superseded analysis"
         )
     audit = pd.read_csv(audit_path)
     if "id" not in audit.columns:
