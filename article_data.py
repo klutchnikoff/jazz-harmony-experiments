@@ -1,10 +1,13 @@
 """Exporting the article's numbers, and checking the manuscript still states them.
 
-Every script named ART-*.py produces the figures of one subsection and calls
-`export` with them.  The rule that makes this worth anything: a script exports
-exactly the numbers the subsection states, no more.  ART-check.py can then read
-the manuscript and verify that each exported value is there, so that a figure
-recomputed after a change of rule cannot quietly stay stale in the text.
+Every script named ART-<subsection title>.py produces the figures of exactly one
+subsection and calls `export` with them.  Nothing else carries that prefix, so
+listing ART-* shows the article's structure at a glance.
+
+The rule that makes this worth anything: a script exports exactly the numbers its
+subsection states, no more.  check_article_numbers.py then reads the manuscript
+and verifies that each exported value is there, so that a figure recomputed after
+a change of rule cannot quietly stay stale in the text.
 
 Values land in article-data/<name>.json, versioned with the scripts.
 """

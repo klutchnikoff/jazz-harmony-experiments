@@ -5,7 +5,7 @@ and looks for each one in TeX/main.tex, digit grouping removed.  A value that
 cannot be found is a number the pipeline computes and the text does not state --
 almost always a figure recomputed after a change of rule and never carried over.
 
-Run:  LSA_LOCAL=1 .venv/bin/python ART-check.py
+Run:  LSA_LOCAL=1 .venv/bin/python check_article_numbers.py
 """
 import sys
 

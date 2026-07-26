@@ -1,8 +1,8 @@
 """Article data for Section 2.2, "The corpus".
 
 Produces every number that subsection states, and nothing else.  Values are
-printed for reading and written to results/data/ for ART-check.py, which
-verifies that each of them appears in the manuscript.
+printed for reading and written to article-data/ for
+check_article_numbers.py, which verifies that each appears in the manuscript.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-corpus.py
 """
