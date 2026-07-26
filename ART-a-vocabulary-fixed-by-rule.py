@@ -33,6 +33,8 @@ def main():
 
     kept = sum(tokens["jazz"][k] for k in vocab)
     values = {
+        # a phrase, not a bare count: "32" alone would be found anywhere
+        "vocabulary_size": f"{len(vocab)} kinds",
         "vocabulary_tokens": kept,
         # exported as the article writes them: a trailing zero is significant
         "jazz_coverage": f"{100 * kept / jazz_total:.2f}",

@@ -41,12 +41,18 @@ def load_all():
 def manuscript_text():
     """The manuscript with LaTeX digit grouping removed, ready for searching.
 
+    Inline math delimiters go too, so that a count written \\(32\\) kinds can be
+    checked as the phrase "32 kinds": a small integer on its own occurs in too
+    many places for finding it to prove anything.
+
     Only the grouping is stripped, not every comma: the manuscript writes large
     numbers as 172{,}783, so plain commas belong to vectors, and removing them
     would make a weight such as (0,1,0,2,0,3,2,0,1,0,1) unsearchable.
     """
     text = MANUSCRIPT.read_text()
-    return text.replace("{,}", "").replace("\\,", "")
+    for old, new in (("{,}", ""), ("\\,", ""), ("\\(", ""), ("\\)", "")):
+        text = text.replace(old, new)
+    return text
 
 
 def occurrences(value, text):

@@ -44,7 +44,8 @@ def main():
     rows.append(("Whole-tone", np.asarray(W_MESSIAEN, float)[0]))
     rows.append(("Octatonic", np.asarray(W_MESSIAEN, float)[1]))
 
-    values = {}
+    words = {7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven"}
+    values = {"system_size": f"{words[len(rows)]} modes"}
     print(f"\n{'mode':12s} {'1/d':>6s}  weights")
     for name, row in rows:
         d, vector = integer_form(row)
