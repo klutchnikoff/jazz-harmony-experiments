@@ -39,13 +39,20 @@ def load_all():
 
 
 def manuscript_text():
-    """The manuscript with LaTeX digit grouping removed, ready for searching."""
+    """The manuscript with LaTeX digit grouping removed, ready for searching.
+
+    Only the grouping is stripped, not every comma: the manuscript writes large
+    numbers as 172{,}783, so plain commas belong to vectors, and removing them
+    would make a weight such as (0,1,0,2,0,3,2,0,1,0,1) unsearchable.
+    """
     text = MANUSCRIPT.read_text()
-    return text.replace("{,}", "").replace("\\,", "").replace(",", "")
+    return text.replace("{,}", "").replace("\\,", "")
 
 
 def occurrences(value, text):
     """Does this value appear in the manuscript, as a standalone number?"""
     import re
     literal = f"{value}"
-    return bool(re.search(rf"(?<![\d.]){re.escape(literal)}(?![\d.])", text))
+    # commas are excluded on both sides too, or a truncated vector would match
+    # as a prefix of the full one
+    return bool(re.search(rf"(?<![\d.,]){re.escape(literal)}(?![\d.,])", text))

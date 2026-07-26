@@ -1,0 +1,11 @@
+{
+  "weights_aeolian": "0,2,2,0,1,0,2,2,0,1,0",
+  "weights_dorian": "0,1,3,0,1,0,2,0,2,1,0",
+  "weights_ionian": "0,1,0,2,2,0,2,0,1,0,2",
+  "weights_locrian": "1,0,2,0,1,4,0,1,0,1,0",
+  "weights_lydian": "0,1,0,2,0,3,2,0,1,0,1",
+  "weights_mixolydian": "0,1,0,3,1,0,2,0,1,2,0",
+  "weights_octatonic": "1,0,1,1,0,1,1,0,1,1,0",
+  "weights_phrygian": "2,0,2,0,1,0,3,1,0,1,0",
+  "weights_whole_tone": "0,1,0,1,0,1,0,1,0,1,0"
+}
