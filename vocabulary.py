@@ -8,6 +8,14 @@ Three rules, and nothing else, decide which kinds the article works with.
                works are then read with a vocabulary they did not shape, which
                makes them a test rather than a party to the design.
 
+               All of it, with no key filter.  Counting which kinds are played
+               does not require the annotated key to be trustworthy, and the
+               filter would import a bias of its own: it discards the songs whose
+               annotated key is not corroborated, which are the harmonically
+               adventurous ones, and those are exactly the songs that play the
+               unusual chords.  Filtering costs the vocabulary 7#9, played in 218
+               songs, along with two minor elevenths.
+
   Families.    Each kind falls to the first applicable clause: 3 and 6 present,
                Diminished; else 4 and 8 present and 7 absent, Augmented; else 4
                present, Major-third; else 3 present, Minor-third; otherwise
@@ -27,7 +35,7 @@ Run:  LSA_LOCAL=1 .venv/bin/python vocabulary.py
 import numpy as np
 from collections import Counter
 
-from corpus import load_corpus, key_reliable
+from corpus import load_corpus
 
 COVERAGE = 0.95
 MIN_SONGS = 2
@@ -51,6 +59,8 @@ NAMES = {
     (0,1,0,1,1,0,1,0,1,1,0): "13",       (0,1,0,1,0,0,0,1,0,1,0): "9#5",
     (0,0,0,1,0,0,1,0,1,0,1): "maj7(13)", (0,0,0,1,0,0,1,0,1,1,0): "7(13)",
     (0,0,1,0,0,0,1,0,1,1,0): "min7(13)", (0,1,0,1,1,0,1,0,1,0,1): "maj13",
+    (0,0,1,1,0,0,1,0,0,1,0): "7#9",      (0,1,1,0,1,0,1,0,0,1,0): "min11",
+    (0,0,1,0,1,0,1,0,0,1,0): "min7(11)",
 }
 
 
@@ -101,11 +111,9 @@ def one_step(seed):
 def corpus_counts():
     """Token counts and song counts per kind, for each repertoire."""
     songs, titles, song_ids, styles, n_jazz = load_corpus()
-    reliable = np.concatenate([key_reliable(song_ids[:n_jazz]),
-                               np.ones(len(songs) - n_jazz, bool)])
     tokens = {"jazz": Counter(), "cp": Counter()}
     in_songs = {"jazz": Counter(), "cp": Counter()}
-    for i in np.flatnonzero(reliable):
+    for i in range(len(songs)):
         g = "jazz" if styles[i] == "jazz" else "cp"
         for k in {tuple(k) for (r, k), d in songs[i]}:
             in_songs[g][k] += 1
