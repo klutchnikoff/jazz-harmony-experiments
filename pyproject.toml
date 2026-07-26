@@ -1,0 +1,15 @@
+[project]
+name = "jazz-harmony-experiments"
+version = "0.2.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Nicolas Klutchnikoff", email = "nicolas.klutchnikoff@gmail.com"},
+]
+dependencies = ["leadsheetanalyser==0.2.0", "numpy>=2.5.1", "scipy>=1.18.0", "pandas>=3.0.3", "matplotlib>=3.11.1", "seaborn>=0.13.2"]
+requires-python = "==3.12.*"
+readme = "README.md"
+license = {text = "MIT"}
+
+
+[tool.pdm]
+distribution = false
