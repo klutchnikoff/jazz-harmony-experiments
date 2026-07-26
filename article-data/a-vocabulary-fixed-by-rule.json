@@ -1,0 +1,10 @@
+{
+  "cp_coverage": "94.90",
+  "jazz_coverage": "96.96",
+  "tokens_augmented": 3059,
+  "tokens_diminished": 8636,
+  "tokens_major_third": 108946,
+  "tokens_minor_third": 44173,
+  "tokens_suspended": 2712,
+  "vocabulary_tokens": 167526
+}
