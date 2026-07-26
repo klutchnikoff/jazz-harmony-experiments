@@ -23,7 +23,10 @@ Three rules, and nothing else, decide which kinds the article works with.
 
   Completion.  Each family gains, in one step, the kinds a member generates by
                adding or removing the ninth, by removing a seventh it contains,
-               or by adding a seventh of a quality another member already uses.
+               or, if it contains none, by adding a seventh of a quality another
+               member already uses.  A kind that already has a seventh is not
+               given a second one of the other quality: without the proviso the
+               rule turned the dominant seventh into a chord carrying both.
                Of those only the kinds played in at least two distinct songs are
                kept, which guards against annotation accidents, not rarity.
 
@@ -102,8 +105,8 @@ def one_step(seed):
                 w = v[:]; w[s - 1] = 0
                 if any(w):
                     out.add(tuple(w))
-        for s in qualities.get(fam, ()):
-            if not v[s - 1]:
+        if not any(v[t - 1] for t in SEVENTHS):
+            for s in qualities.get(fam, ()):
                 w = v[:]; w[s - 1] = 1
                 out.add(tuple(w))
     return out - set(seed)
