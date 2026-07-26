@@ -59,6 +59,11 @@ def occurrences(value, text):
     """Does this value appear in the manuscript, as a standalone number?"""
     import re
     literal = f"{value}"
-    # commas are excluded on both sides too, or a truncated vector would match
-    # as a prefix of the full one
-    return bool(re.search(rf"(?<![\d.,]){re.escape(literal)}(?![\d.,])", text))
+    # A digit at either end must not be preceded or followed by another digit,
+    # a decimal point, or a comma: without that, 28 matches inside 2829 and a
+    # truncated vector matches as a prefix of the full one.  The guard applies
+    # only where the literal itself ends in a digit, so that a phrase such as
+    # "22 in no more than two" is not refused for the full stop after it.
+    before = r"(?<![\d.,])" if literal[:1].isdigit() else ""
+    after = r"(?![\d.,])" if literal[-1:].isdigit() else ""
+    return bool(re.search(before + re.escape(literal) + after, text))
