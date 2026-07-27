@@ -67,12 +67,18 @@ def main():
                            for j in range(9) if key[j] > 1e-12)
         print(f"   {', '.join(sorted(ks)):36s} -> {spread}")
 
+    # The manuscript states the injectivity of Phi_1 as a formula, with no number
+    # for the checker to find, so the claim is verified here instead.
+    assert distinct(phi1) == len(vocab), (
+        f"Phi_1 is no longer injective: {distinct(phi1)} values for "
+        f"{len(vocab)} kinds, yet Section 4.2 says Phi_1(k) = Phi_1(k') "
+        "forces k = k'")
+
     point_mass = int((top0 > 1 - 1e-9).sum())
     words = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six"}
     export("what-the-two-readings-cost", {
         # phrases, not bare integers: 32 and 10 occur throughout the manuscript
-        "phi1_distinct": f"{distinct(phi1)} readings are pairwise distinct",
-        "phi0_distinct": f"only {distinct(phi0)} distinct readings",
+        "phi0_distinct": f"only {distinct(phi0)} distinct values",
         "phi0_point_mass": f"the {point_mass} kinds a single mode weighs",
         "collapsed_classes": f"{words[len(collapsed)]} classes collapse",
         # the bound deserves its third decimal, the medians do not
