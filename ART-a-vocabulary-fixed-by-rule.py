@@ -66,6 +66,17 @@ def main():
               f"{len(fams)} of the five families"
               + (f", missing {' and '.join(missing)}" if missing else ""))
 
+    # Section 2.3 says a 90 % cut would leave no suspended kind, and that
+    # thirteen of the thirty-two come from the completion.  Both were computed
+    # here and neither was exported, so neither was checked.
+    at_ninety = families_at(0.90, tokens, in_songs)[0]
+    assert "Suspended" not in at_ninety, (
+        "a 90 % cut now retains a suspended kind, which Section 2.3 denies")
+    assert len(FAMILIES) == len(families_at(COVERAGE, tokens, in_songs)[0]), (
+        "the 95 % cut no longer reaches all five families")
+    spelled = {12: "Twelve", 13: "Thirteen", 14: "Fourteen", 15: "Fifteen"}
+    values["from_completion"] = f"{spelled[len(added)]} of the thirty-two"
+
     export("a-vocabulary-fixed-by-rule", values)
 
 
