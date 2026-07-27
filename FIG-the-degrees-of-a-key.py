@@ -35,14 +35,26 @@ SOLE, TIED = "#c0392b", "#e08214"
 MAJ7, MI7, DOM, HALF = (4, 7, 11), (3, 7, 10), (4, 7, 10), (3, 6, 10)
 FLAT = "♭"
 
-# (label, root above the tonic, kind)
-C_MAJOR = [("I", 0, MAJ7), ("ii", 2, MI7), ("iii", 4, MI7), ("IV", 5, MAJ7),
-           ("V", 7, DOM), ("vi", 9, MI7), ("viiø", 11, HALF)]
-C_CHROMATIC = [("iiø", 2, HALF), (f"{FLAT}III", 3, MAJ7), ("iv", 5, MI7),
-               (f"{FLAT}VI", 8, MAJ7), (f"{FLAT}VII", 10, DOM),
-               (f"{FLAT}II7", 1, DOM), ("I7", 0, DOM), ("IV7", 5, DOM)]
-A_MINOR = [("i", 0, MI7), ("iiø", 2, HALF), ("III", 3, MAJ7),
-           ("iv", 5, MI7), ("v", 7, MI7), ("VI", 8, MAJ7), ("VII", 10, DOM)]
+# (label, root above the tonic, kind, the mode harmony predicts)
+#
+# The prediction owes nothing to the system: a major key's own mode is Ionian
+# and a minor key's Aeolian, the parallel minor a major key borrows from has
+# Aeolian for its mode, the flattened supertonic is the degree that defines
+# Phrygian, a tonic carrying a flattened seventh is Mixolydian, and IV7 brings
+# the minor third with the major sixth, which is Dorian.  Unlike the pairings of
+# Figure 1 these were written down after the readings were computed, so they
+# corroborate rather than test.
+I_, A_, M_, D_, P_ = "Ionian", "Aeolian", "Mixolydian", "Dorian", "Phrygian"
+C_MAJOR = [("I", 0, MAJ7, I_), ("ii", 2, MI7, I_), ("iii", 4, MI7, I_),
+           ("IV", 5, MAJ7, I_), ("V", 7, DOM, I_), ("vi", 9, MI7, I_),
+           ("viiø", 11, HALF, I_)]
+C_CHROMATIC = [("iiø", 2, HALF, A_), (f"{FLAT}III", 3, MAJ7, A_),
+               ("iv", 5, MI7, A_), (f"{FLAT}VI", 8, MAJ7, A_),
+               (f"{FLAT}VII", 10, DOM, A_), (f"{FLAT}II7", 1, DOM, P_),
+               ("I7", 0, DOM, M_), ("IV7", 5, DOM, D_)]
+A_MINOR = [("i", 0, MI7, A_), ("iiø", 2, HALF, A_), ("III", 3, MAJ7, A_),
+           ("iv", 5, MI7, A_), ("v", 7, MI7, A_), ("VI", 8, MAJ7, A_),
+           ("VII", 10, DOM, A_)]
 
 CELL, LEFT, BOTTOM, TOP, GAP = 0.205, 1.02, 0.78, 0.30, 0.40
 
@@ -56,7 +68,7 @@ def reading(offset, kind):
 
 
 def panel(ax, degrees, norm, rows=True):
-    P = np.array([reading(o, k) for _, o, k in degrees])
+    P = np.array([reading(o, k) for _, o, k, _w in degrees])
     ax.imshow(P.T, cmap=HEATMAP_CMAP, aspect="equal", norm=norm,
               interpolation="nearest")
     for column, col in enumerate(P):
@@ -65,6 +77,8 @@ def panel(ax, degrees, norm, rows=True):
         for row in hit:
             ax.add_patch(Rectangle((column - 0.5, row - 0.5), 1, 1, fill=False,
                                    edgecolor=edge, lw=1.0, zorder=3))
+    for column, (_, _o, _k, want) in enumerate(degrees):
+        ax.plot(column, MODES.index(want), "o", ms=2.8, color=SOLE, zorder=4)
     ax.set_xticks(range(len(degrees)))
     ax.set_xticklabels([d[0] for d in degrees], rotation=90, fontsize=7.5)
     ax.set_yticks(range(9))
@@ -78,7 +92,7 @@ def panel(ax, degrees, norm, rows=True):
 def main():
     left_degrees = C_MAJOR + C_CHROMATIC
     everything = np.array([reading(o, k)
-                           for _, o, k in left_degrees + A_MINOR])
+                           for _, o, k, _w in left_degrees + A_MINOR])
     norm = PowerNorm(gamma=0.55, vmin=0, vmax=everything.max())
 
     wl, wr = len(left_degrees) * CELL, len(A_MINOR) * CELL
