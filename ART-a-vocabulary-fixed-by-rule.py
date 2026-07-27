@@ -32,6 +32,12 @@ def main():
     # Section 2.1 prints the kind of a dominant seventh in full, which is a
     # claim about the interval convention and not an illustration: the ones sit
     # at the major third, the perfect fifth, and the minor seventh.
+    # Section 2.3 says the thirty-two carry thirty-two distinct symbols, which
+    # is what lets it speak of a kind's ninth or seventh without ambiguity: a
+    # coordinate carries no spelling, and several named intervals share one.
+    assert len({name(k) for k in vocab}) == len(vocab), (
+        "two kinds of the vocabulary now share a symbol")
+
     dominant = next(k for k in vocab if name(k) == "7")
     assert dominant == (0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0), (
         f"the dominant seventh is now {dominant}, and Section 2.1 prints it")
