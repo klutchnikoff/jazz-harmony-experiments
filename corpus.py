@@ -1,11 +1,12 @@
 """Loading the two corpora, and the key filter that defines the working set.
 
-Carried over unchanged from the v0.2 pipeline: the parsing is delicate -- minor
-keys mapped to their relative major, durations read alongside the chords, the
+Carried over from the v0.2 pipeline, with one change: songs are transposed to
+their annotated tonic and no longer to the tonic of its collection.  The parsing
+is delicate -- durations read alongside the chords, the
 annotated key corroborated against a Krumhansl estimate -- and rewriting it would
 risk a silently different corpus.  Everything downstream of the loading is new.
 
-`key_reliable` reads cache/key_audit.csv, produced by key_audit.py.
+`key_reliable` and `key_exact` read cache/key_audit.csv, produced by key_audit.py.
 """
 from pathlib import Path
 
@@ -24,8 +25,23 @@ BORROWED_DEGREES = {3, 8, 10}  # bIII, bVI, bVII relative to the tonic
 MIN_CHORDS = 3
 
 
-def normalised_tonic(note, mode):
-    """Pitch class of the tonic after collection normalisation, or None."""
+def annotated_tonic(note, mode):
+    """Pitch class of the annotated tonic, or None.
+
+    The tonic itself, not the tonic of its collection: a piece in A minor has
+    tonic A.  Until v0.3 this returned the relative major for minor keys, which
+    was harmless while only kinds were read, a kind being transposition
+    invariant.  Section 5 reads a chord from the tonic, and the seven diatonic
+    modes are the seven rotations of one collection, so folding minor onto its
+    relative major would put Aeolian beyond reach by construction.
+    """
+    del mode  # the mode no longer moves the tonic; kept for call-site symmetry
+    return NOTE_TO_PC.get(note)
+
+
+def collection_tonic(note, mode):
+    """Pitch class of the tonic of the collection, minor mapped to its relative
+    major.  What the collection-level agreement of key_reliable() compares."""
     tonic = NOTE_TO_PC.get(note)
     if tonic is None:
         return None
@@ -83,7 +99,7 @@ def load_real_book():
         if not (isinstance(key, list) and key and isinstance(key[0], str) and ":" in key[0]):
             continue
         note, mode = key[0].split(":")[0], key[0].split(":")[1]
-        tonic = normalised_tonic(note, mode)
+        tonic = annotated_tonic(note, mode)
         if tonic is None:
             continue
         if str(mode).strip().lower().startswith("min"):
@@ -96,12 +112,12 @@ def load_real_book():
             titles.append(str(row["title"]))
             ids.append(str(row["id"]))
     print(f"  Real Book: {len(songs)} songs "
-          f"({n_minor} minor annotations mapped to their relative major)")
+          f"({n_minor} of them annotated in a minor key, read from that tonic)")
     return songs, titles, ids
 
 
 def load_common_practice():
-    """When-in-Rome songs with durations, collection-normalised."""
+    """When-in-Rome songs with durations, transposed to their annotated tonic."""
     meta = pd.read_csv(DATA / "meta.csv")
     wir = meta[meta["id"].astype(str).str.startswith("when-in-rome")]
     songs, titles, styles, ids = [], [], [], []
@@ -121,7 +137,7 @@ def load_common_practice():
         if ":" not in key0:
             continue
         note, mode = key0.split(":")[0], key0.split(":")[1]
-        tonic = normalised_tonic(note, mode)
+        tonic = annotated_tonic(note, mode)
         if tonic is None:
             continue
         progression, durations = [], []
@@ -149,7 +165,30 @@ def _annotated_collection(label):
     if not isinstance(label, str) or ":" not in label:
         return None
     note, mode = label.split(":")[0], label.split(":")[1]
-    return normalised_tonic(note, mode)
+    return collection_tonic(note, mode)
+
+
+def _audit_table():
+    """The key audit, with the guards both filters need."""
+    audit_path = CACHE_DIR / "key_audit.csv"
+    if not audit_path.exists():
+        raise RuntimeError(
+            f"{audit_path} is missing; run key_audit.py first "
+            "(generate_all.py already orders it before the corpus figures)"
+        )
+    producer = Path(__file__).resolve().parent / "key_audit.py"
+    if producer.exists() and producer.stat().st_mtime > audit_path.stat().st_mtime:
+        raise RuntimeError(
+            f"{audit_path} is older than key_audit.py; re-run key_audit.py, "
+            "or the filters below rest on a superseded analysis"
+        )
+    audit = pd.read_csv(audit_path)
+    if "id" not in audit.columns:
+        raise RuntimeError(
+            f"{audit_path} predates the switch to stable ids; delete it and "
+            "re-run key_audit.py"
+        )
+    return audit
 
 
 def key_reliable(song_ids):
@@ -167,24 +206,7 @@ def key_reliable(song_ids):
 
     Reads tmp/key_audit.csv, produced by key_audit.py.
     """
-    audit_path = CACHE_DIR / "key_audit.csv"
-    if not audit_path.exists():
-        raise RuntimeError(
-            f"{audit_path} is missing; run key_audit.py first "
-            "(generate_all.py already orders it before the corpus figures)"
-        )
-    producer = Path(__file__).resolve().parent / "key_audit.py"
-    if producer.exists() and producer.stat().st_mtime > audit_path.stat().st_mtime:
-        raise RuntimeError(
-            f"{audit_path} is older than key_audit.py; re-run key_audit.py, "
-            "or the filter below rests on a superseded analysis"
-        )
-    audit = pd.read_csv(audit_path)
-    if "id" not in audit.columns:
-        raise RuntimeError(
-            f"{audit_path} predates the switch to stable ids; delete it and "
-            "re-run key_audit.py"
-        )
+    audit = _audit_table()
     gap = {}
     for song_id, annotated, pc, mode in zip(audit["id"], audit["annotated"],
                                             audit["est_pc"], audit["est_mode"]):
@@ -194,6 +216,30 @@ def key_reliable(song_ids):
         est = (int(pc) + 3) % 12 if str(mode) == "minor" else int(pc)
         gap[str(song_id)] = (est - ann) % 12
     return np.array([gap.get(i) in (0, SUBDOMINANT_PULL) for i in song_ids])
+
+
+def key_exact(song_ids):
+    """Mask over `song_ids`: does the Krumhansl estimate confirm tonic and mode?
+
+    Stricter than key_reliable(), which corroborates the collection only and so
+    passes the songs whose annotation names the relative major of a minor tune.
+    That was harmless while only kinds were read.  Section 5 reads a chord from
+    the tonic, so the centre has to be right and not merely the collection.
+
+    The Real Book key annotations are crowd-sourced -- ChoCo records them as
+    such -- and no authoritative source for them exists.  Measured against the
+    Weimar Jazz Database, the one expert annotation with a usable overlap, this
+    filter cuts the share of annotated-major songs that Weimar hears as minor
+    from 11 of 114 to 1 of 60.  The sample is too small to rank this filter
+    against the alternatives tried, and the figure is agreement between
+    annotators, not accuracy.
+
+    Reads cache/key_audit.csv, produced by key_audit.py.
+    """
+    audit = _audit_table()
+    exact = {str(i): c == "exact"
+             for i, c in zip(audit["id"], audit["category"])}
+    return np.array([exact.get(str(i), False) for i in song_ids])
 
 
 # Ground-cost variants.  "duration" and "token" are the article's system W_D and

@@ -118,13 +118,13 @@ print(f"  written to {OUT}")
 
 # ---------------------------------------------------------------------------
 # Collection-level agreement: the figures quoted in Section 8.1.
-from corpus import key_reliable, normalised_tonic, SUBDOMINANT_PULL
+from corpus import key_reliable, collection_tonic, SUBDOMINANT_PULL
 
 
 def annotated_collection(label):
     if not isinstance(label, str) or ":" not in label:
         return None
-    return normalised_tonic(label.split(":")[0], label.split(":")[1])
+    return collection_tonic(label.split(":")[0], label.split(":")[1])
 
 
 gaps = []

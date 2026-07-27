@@ -33,7 +33,7 @@ from music21 import stream
 
 from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
 from corpus import (
-    DATA, era, map_chord, normalised_tonic, _annotation, SUBDOMINANT_PULL,
+    DATA, era, map_chord, collection_tonic, _annotation, SUBDOMINANT_PULL,
 )
 
 def estimate_key(prog):
@@ -74,12 +74,14 @@ def build_audit():
         keys = _annotation(j, "key_mode")
         if chords is None or keys is None or not len(keys.data):
             continue
-        opening = normalised_tonic(*str(keys.data[0].value).split(":")[:2]) \
+        opening = collection_tonic(*str(keys.data[0].value).split(":")[:2]) \
             if ":" in str(keys.data[0].value) else None
         if opening is None:
             continue
 
-        # What the loader transposes, and what the annotations say it should be.
+        # Collections, as this audit has always compared: the loader now
+        # transposes by the annotated tonic instead, so the two are no longer
+        # the same question.  Revisit when Section 6 needs this measure.
         total = away = 0.0
         far = 0.0
         for obs in keys.data:
@@ -87,7 +89,7 @@ def build_audit():
             d = float(obs.duration or 0.0)
             if d <= 0 or ":" not in label:
                 continue
-            col = normalised_tonic(*label.split(":")[:2])
+            col = collection_tonic(*label.split(":")[:2])
             if col is None:
                 continue
             total += d
