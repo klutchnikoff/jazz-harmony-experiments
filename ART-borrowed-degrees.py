@@ -12,6 +12,10 @@ is.  The subdominant seventh brings the minor third to a key that keeps its
 major sixth, which is Dorian.  They were written down after the readings were
 computed, though, so they corroborate where the pairings of Section 4 test.
 
+The minor key's alterations are checked in the same way, with one difference:
+where the prediction is None the assertion asks only that Ionian be among the
+maxima, which is the fallback the subsection describes and not a success.
+
 Exports only the two ends of the Aeolian run, the five degrees between them
 being covered by the assertion rather than by a number in the text.
 
@@ -39,6 +43,19 @@ ELSEWHERE = [
     ("subdominant seventh", 5, DOM, "Dorian"),
 ]
 
+DIM7 = (3, 6, 9)
+# The alterations of a minor key.  A prediction of None marks a degree whose
+# mode harmony would name, the harmonic minor, is not among the nine.
+ALTERED = [
+    ("minor dominant seventh", 7, DOM, None),
+    ("diminished seventh on the leading note", 11, DIM7, None),
+    ("Dorian supertonic", 2, MI7, "Dorian"),
+    ("Neapolitan", 1, MAJ7, "Phrygian"),
+    ("Dorian subdominant seventh", 5, DOM, "Dorian"),
+    ("tonic sixth", 0, (3, 7, 9), "Dorian"),
+    ("Picardy tonic", 0, MAJ7, "Ionian"),
+]
+
 
 def reading(offset, kind):
     content = {(offset + i) % 12 for i in (0,) + tuple(kind)} | {0}
@@ -58,6 +75,22 @@ def main():
             f"the {name} reads {top} and no longer {want} outright, "
             "so Figure 2 draws a dot outside its box")
         shares[name] = p.max()
+
+    print(f"\n{'alteration of a minor key':40s} {'predicted':11s} {'read':18s} share")
+    for name, offset, kind, want in ALTERED:
+        p = reading(offset, kind)
+        top = [MODES[j] for j in range(9) if p[j] >= p.max() - 1e-12]
+        print(f"{name:40s} {want or '--':11s} {'='.join(top):18s} {p.max():.3f}")
+        if want is None:
+            # Section 5.3 says these read Ionian, the mode whose leading note
+            # they borrow, for want of a harmonic minor among the nine
+            assert "Ionian" in top, (
+                f"the {name} reads {top} and no longer Ionian, so the fallback "
+                "Section 5.3 describes is no longer the one taken")
+        else:
+            assert want in top, (
+                f"the {name} reads {top}, and Figure 3 draws its dot outside "
+                "every box")
 
     run = [shares[n] for n, _, _, _ in BORROWED]
     lo, hi = min(run), max(run)

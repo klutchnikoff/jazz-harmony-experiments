@@ -55,6 +55,15 @@ C_CHROMATIC = [("iiø", 2, HALF, A_), (f"{FLAT}III", 3, MAJ7, A_),
 A_MINOR = [("i", 0, MI7, A_), ("iiø", 2, HALF, A_), ("III", 3, MAJ7, A_),
            ("iv", 5, MI7, A_), ("v", 7, MI7, A_), ("VI", 8, MAJ7, A_),
            ("VII", 10, DOM, A_)]
+# A prediction of None is a degree whose mode harmony would name is not among the
+# nine: the raised leading note of a minor key belongs to the harmonic minor,
+# which Section 3 does not carry.  Those columns carry no dot, which is the
+# honest way to draw an expectation the system cannot hold.
+DIM7 = (3, 6, 9)
+A_ALTERED = [("V7", 7, DOM, None), ("vii°7", 11, DIM7, None),
+             ("ii", 2, MI7, D_), (f"{FLAT}II", 1, MAJ7, P_),
+             ("IV7", 5, DOM, D_), ("i6", 0, (3, 7, 9), D_),
+             ("I", 0, MAJ7, I_)]
 
 CELL, LEFT, BOTTOM, TOP, GAP = 0.205, 1.02, 0.78, 0.30, 0.40
 
@@ -78,7 +87,9 @@ def panel(ax, degrees, norm, rows=True):
             ax.add_patch(Rectangle((column - 0.5, row - 0.5), 1, 1, fill=False,
                                    edgecolor=edge, lw=1.0, zorder=3))
     for column, (_, _o, _k, want) in enumerate(degrees):
-        ax.plot(column, MODES.index(want), "o", ms=2.8, color=SOLE, zorder=4)
+        if want is not None:
+            ax.plot(column, MODES.index(want), "o", ms=2.8, color=SOLE,
+                    zorder=4)
     ax.set_xticks(range(len(degrees)))
     ax.set_xticklabels([d[0] for d in degrees], rotation=90, fontsize=7.5)
     ax.set_yticks(range(9))
@@ -118,11 +129,12 @@ def draw(groups, norm, stem):
 
 def main():
     everything = np.array([reading(o, k) for _, o, k, _w
-                           in C_MAJOR + C_CHROMATIC + A_MINOR])
+                           in C_MAJOR + C_CHROMATIC + A_MINOR + A_ALTERED])
     norm = PowerNorm(gamma=0.55, vmin=0, vmax=everything.max())
 
     draw([("C major", C_MAJOR), ("A minor", A_MINOR)], norm, "degrees-of-a-key")
-    draw([("chromatic degrees of C major", C_CHROMATIC)], norm, "borrowed-degrees")
+    draw([("chromatic in C major", C_CHROMATIC),
+          ("altered in A minor", A_ALTERED)], norm, "borrowed-degrees")
 
 
 if __name__ == "__main__":
