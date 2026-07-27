@@ -1,0 +1,10 @@
+{
+  "collapsed_classes": "Four classes collapse",
+  "phi0_distinct": "only 25 distinct readings",
+  "phi0_median": "0.56",
+  "phi0_point_mass": "the 10 kinds a single mode weighs",
+  "phi1_distinct": "32 readings are pairwise distinct",
+  "phi1_largest": "0.288",
+  "phi1_median": "0.19",
+  "uniform": "0.111"
+}
