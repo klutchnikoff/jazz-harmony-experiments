@@ -28,6 +28,13 @@ def families_at(coverage, tokens, in_songs):
 
 def main():
     vocab, seed, added, outside, tokens, in_songs = build()
+
+    # Section 2.1 prints the kind of a dominant seventh in full, which is a
+    # claim about the interval convention and not an illustration: the ones sit
+    # at the major third, the perfect fifth, and the minor seventh.
+    dominant = next(k for k in vocab if name(k) == "7")
+    assert dominant == (0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0), (
+        f"the dominant seventh is now {dominant}, and Section 2.1 prints it")
     jazz_total = sum(tokens["jazz"].values())
     cp_total = sum(tokens["cp"].values())
 
@@ -35,6 +42,7 @@ def main():
     values = {
         # a phrase, not a bare count: "32" alone would be found anywhere
         "vocabulary_size": f"{len(vocab)} kinds",
+        "dominant_seventh": ",".join(str(x) for x in dominant),
         "vocabulary_tokens": kept,
         # exported as the article writes them: a trailing zero is significant
         "jazz_coverage": f"{100 * kept / jazz_total:.2f}",
