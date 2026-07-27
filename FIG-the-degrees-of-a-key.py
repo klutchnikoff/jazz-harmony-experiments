@@ -89,41 +89,40 @@ def panel(ax, degrees, norm, rows=True):
     return P
 
 
-def main():
-    left_degrees = C_MAJOR + C_CHROMATIC
-    everything = np.array([reading(o, k)
-                           for _, o, k, _w in left_degrees + A_MINOR])
-    norm = PowerNorm(gamma=0.55, vmin=0, vmax=everything.max())
-
-    wl, wr = len(left_degrees) * CELL, len(A_MINOR) * CELL
+def draw(groups, norm, stem):
+    """One figure, one panel per (title, degrees) pair, sharing a colour bar."""
+    widths = [len(d) * CELL for _, d in groups]
     height_matrix = 9 * CELL
-    width = LEFT + wl + GAP + wr + 0.42
+    width = LEFT + sum(widths) + GAP * (len(groups) - 1) + 0.42
     height = BOTTOM + height_matrix + TOP
     fig = plt.figure(figsize=(width, height))
 
-    def box(x, w):
-        return [x / width, BOTTOM / height, w / width, height_matrix / height]
+    x, first = LEFT, None
+    for (title, degrees), w in zip(groups, widths):
+        ax = fig.add_axes([x / width, BOTTOM / height,
+                           w / width, height_matrix / height])
+        panel(ax, degrees, norm, rows=first is None)
+        ax.set_title(title, fontsize=8.5, pad=4)
+        first = first or ax
+        x += w + GAP
 
-    ax_l = fig.add_axes(box(LEFT, wl))
-    ax_r = fig.add_axes(box(LEFT + wl + GAP, wr))
-    panel(ax_l, left_degrees, norm)
-    panel(ax_r, A_MINOR, norm, rows=False)
-
-    # the rule between the diatonic degrees and the chromatic ones
-    ax_l.axvline(len(C_MAJOR) - 0.5, color="0.35", lw=0.9)
-    ax_l.set_title("C major", fontsize=8.5, pad=4)
-    ax_r.set_title("A minor", fontsize=8.5, pad=4)
-
-    cax = fig.add_axes([(LEFT + wl + GAP + wr + 0.10) / width,
-                        BOTTOM / height, 0.08 / width,
-                        height_matrix / height])
-    fig.colorbar(ax_l.images[0], cax=cax,
+    cax = fig.add_axes([(x - GAP + 0.10) / width, BOTTOM / height,
+                        0.08 / width, height_matrix / height])
+    fig.colorbar(first.images[0], cax=cax,
                  ticks=[0, 0.1, 0.25, 0.5, 0.75]).ax.tick_params(length=2,
-                                                                labelsize=7)
-
+                                                                 labelsize=7)
     OUT.mkdir(parents=True, exist_ok=True)
-    save_article_figure(fig, OUT, "degrees-of-a-key")
-    print(f"written to {OUT}/degrees-of-a-key.pdf")
+    save_article_figure(fig, OUT, stem)
+    print(f"written to {OUT}/{stem}.pdf")
+
+
+def main():
+    everything = np.array([reading(o, k) for _, o, k, _w
+                           in C_MAJOR + C_CHROMATIC + A_MINOR])
+    norm = PowerNorm(gamma=0.55, vmin=0, vmax=everything.max())
+
+    draw([("C major", C_MAJOR), ("A minor", A_MINOR)], norm, "degrees-of-a-key")
+    draw([("chromatic degrees of C major", C_CHROMATIC)], norm, "borrowed-degrees")
 
 
 if __name__ == "__main__":
