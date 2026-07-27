@@ -5,6 +5,11 @@ integers that occur all over the manuscript, so they are asserted here rather
 than exported, and only the supertonic's tie carries a figure worth searching
 for.
 
+The choice of sevenths is the repertoire's before it is ours, and the share of
+symbols carrying one is exported for both corpora: a majority of the jazz
+symbols, a quarter of the common-practice ones, which is the difference between
+a repertoire that writes ii7 and one that writes ii.
+
   major sevenths   five of the seven diatonic degrees read Ionian outright
   minor sevenths   five of the seven read Aeolian outright
   triads           three of seven in either key
@@ -21,6 +26,7 @@ import numpy as np
 
 from article_data import export
 from chord_scale import SYSTEM, MODES
+from vocabulary import corpus_counts
 
 ORDER = 0.15
 MAJ7, MI7, DOM, HALF = (4, 7, 11), (3, 7, 10), (4, 7, 10), (3, 6, 10)
@@ -80,7 +86,24 @@ def main():
     print(f"\nthe supertonic seventh divides {share:.4f} between "
           f"{' and '.join(modes)}")
 
-    export("the-degrees-of-a-key", {"supertonic_tie": f"{share:.2f}"})
+    tokens = corpus_counts()[0]
+    seventh = {}
+    for corpus in ("jazz", "cp"):
+        counts = tokens[corpus]
+        total = sum(counts.values())
+        with_seventh = sum(n for k, n in counts.items() if k[9] or k[10])
+        seventh[corpus] = 100 * with_seventh / total
+        print(f"  {corpus:4s} {with_seventh:7,d} of {total:7,d} symbols carry a "
+              f"seventh, {seventh[corpus]:.1f}%")
+    assert seventh["jazz"] > 50 > seventh["cp"], (
+        "the sevenths are no longer the jazz norm and the triads the "
+        "common-practice one, which is what Section 5.2 rests on")
+
+    export("the-degrees-of-a-key", {
+        "supertonic_tie": f"{share:.2f}",
+        "jazz_sevenths": f"{seventh['jazz']:.1f}",
+        "cp_sevenths": f"{seventh['cp']:.1f}",
+    })
 
 
 if __name__ == "__main__":
