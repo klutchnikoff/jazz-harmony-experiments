@@ -19,7 +19,7 @@ Run:  LSA_LOCAL=1 .venv/bin/python ART-what-the-two-readings-cost.py
 import numpy as np
 
 from article_data import export
-from chord_scale import SYSTEM, MODES
+from chord_scale import SYSTEM, MODES, PAIRING
 from vocabulary import build, name
 
 
@@ -66,6 +66,17 @@ def main():
         spread = ", ".join(f"{MODES[j]} {key[j]:.3f}"
                            for j in range(9) if key[j] > 1e-12)
         print(f"   {', '.join(sorted(ks)):36s} -> {spread}")
+
+    # Section 4.2 says each collapsed class gathers kinds a soloist plays one
+    # scale over, and that the scale carries the largest coordinate.  Checked
+    # against the reference pairings: no class holds two kinds pointing at
+    # different scales, and the scale they point at is the class's top mode.
+    for key, ks in collapsed:
+        scales = {PAIRING[k] for k in ks if k in PAIRING}
+        assert len(scales) <= 1, f"{ks} disagree on a scale: {scales}"
+        if scales:
+            top = MODES[int(np.argmax(key))]
+            assert top == scales.pop(), f"{ks} do not read as their scale, {top}"
 
     # The manuscript states the injectivity of Phi_1 as a formula, with no number
     # for the checker to find, so the claim is verified here instead.
