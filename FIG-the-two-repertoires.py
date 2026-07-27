@@ -11,7 +11,8 @@ bar height compares them directly.
 The nine modes run along each axis in the order of Section 3.3, brightest first,
 so that the reversal the subsection reports is a leftward shift of the jazz bars
 in both panels.  A mode whose difference clears the family-wise 5 % of the
-permutation test carries a mark: four of the nine on the left, five on the right.
+permutation test carries a mark, and the modes that do not are faded: four of the
+nine are marked on the left, five on the right.
 
 The representations come from ART-the-two-repertoires.py, loaded rather than
 recomputed, so that the figure cannot drift from the numbers the manuscript
@@ -32,6 +33,7 @@ from figure_style import save_article_figure
 HERE = Path(__file__).resolve().parent
 OUT = HERE.parents[0] / "TeX" / "fig"
 JAZZ, CP = "#1f4e79", "#a3c4dc"
+FADED = 0.38          # modes whose difference does not clear the test
 PERMUTATIONS = 20_000
 
 
@@ -84,12 +86,17 @@ def main():
     x = np.arange(9)
     for ax, m in zip(axes, ("major", "minor")):
         jz, cp, n_jz, n_cp = means[m]
-        ax.bar(x - 0.21, jz, 0.40, color=JAZZ, label=f"jazz ({n_jz})")
-        ax.bar(x + 0.21, cp, 0.40, color=CP, label=f"common practice ({n_cp})")
+        left = ax.bar(x - 0.21, jz, 0.40, color=JAZZ, label=f"jazz ({n_jz})")
+        right = ax.bar(x + 0.21, cp, 0.40, color=CP,
+                       label=f"common practice ({n_cp})")
+        # the mark survives a monochrome print, the fading reads on a screen
         for j, star in enumerate(marked[m]):
             if star:
                 ax.plot(j, max(jz[j], cp[j]) + 0.012, marker=(6, 2, 0), ms=4,
                         color="0.35", lw=0.8)
+            else:
+                left[j].set_alpha(FADED)
+                right[j].set_alpha(FADED)
         ax.set_title(f"{m}-key works", fontsize=8.5, pad=4)
         ax.set_xticks(x)
         ax.set_xticklabels(MODES, rotation=90, fontsize=7.5)
