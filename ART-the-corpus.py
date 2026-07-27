@@ -23,9 +23,13 @@ def main():
         "cp_tokens": sum(tokens["cp"].values()),
         "cp_kinds": len(tokens["cp"]),
     }
-    # The clause on editorial granularity rounds this ratio to "some four times".
+    # Section 2.2 states both densities and their ratio, where it used to say
+    # "some four times" and leave the figure out of the pipeline entirely
     per_jazz = values["jazz_tokens"] / values["jazz_songs"]
     per_cp = values["cp_tokens"] / values["cp_works"]
+    values["per_sheet"] = f"{per_jazz:.1f}"
+    values["per_work"] = f"{per_cp:.1f}"
+    values["density_ratio"] = f"{per_cp / per_jazz:.1f}"
 
     print(f"\nReal Book     {values['jazz_songs']:5,d} lead sheets  "
           f"{values['jazz_tokens']:8,d} symbols  {values['jazz_kinds']:4d} kinds  "
