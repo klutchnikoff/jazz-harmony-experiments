@@ -12,6 +12,13 @@ simplification costs.  Both are checked here.
                        another collection, and how much of that is a distant
                        modulation rather than a neighbouring one.
 
+  the local tonic      What q_t = q moves, read directly: the common-practice
+                       partition times its key annotations, so each chord can be
+                       read under the tonic in force at its own onset and the two
+                       representations compared.  Half the works do not move at
+                       all and the corpus mean shifts by 0.029 in l1, which is a
+                       fifth of the gap Section 6.2 measures between repertoires.
+
   the weighting        Duration against chord count.  The subsection claims the
                        choice is immaterial, and the correlation between the two
                        mean representations is asserted rather than exported,
@@ -23,13 +30,20 @@ a work's opening key can be trusted, this one how long the work stays in it.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-representation-of-a-work.py
 """
+import warnings
+
+import jams
 import numpy as np
 import pandas as pd
 
 from article_data import export
 from article_setup import cache_directory
 from chord_scale import SYSTEM
-from corpus import key_exact, load_corpus
+from corpus import DATA, _annotation, era, key_exact, load_corpus
+from leadsheetanalyser.chords import map_chord
+from leadsheetanalyser.constants import NOTE_TO_PC
+
+warnings.filterwarnings("ignore")
 
 ORDER = 0.15
 MODULATION = cache_directory() / "common_practice_audit.csv"
@@ -54,6 +68,63 @@ def represent(song, by_duration=True):
         weighted += w * degree_reading(root, kind)
         total += w
     return weighted / total
+
+
+def local_tonic_shift(read):
+    """(share of works unchanged, l1 shift of the corpus mean) under local keys.
+
+    Each chord is read twice: under the opening tonic, as the section does, and
+    under the tonic annotated at its own onset.  A chord falling in no annotated
+    span keeps the opening tonic, which happens 24 times in the whole partition.
+    """
+    def tonic_of(value):
+        if ":" not in str(value):
+            return None
+        return NOTE_TO_PC.get(str(value).split(":")[0])
+
+    meta = pd.read_csv(DATA / "meta.csv")
+    wir = meta[meta["id"].astype(str).str.startswith("when-in-rome")]
+    opening, local = [], []
+    for _, row in wir.iterrows():
+        if str(row["id"]) not in read or era(row["composers"]) is None:
+            continue
+        try:
+            j = jams.load(str(DATA / "jams_files" / f"{row['id']}.jams"),
+                          validate=False)
+        except Exception:
+            continue
+        chords, keys = _annotation(j, "chord_harte"), _annotation(j, "key_mode")
+        if chords is None or keys is None or not len(keys.data):
+            continue
+        spans = [(o.time, o.time + (o.duration or 0), tonic_of(o.value))
+                 for o in keys.data]
+        spans = [s for s in spans if s[2] is not None]
+        if not spans:
+            continue
+        q0 = spans[0][2]
+        a, b, w = np.zeros(9), np.zeros(9), 0.0
+        for o in chords.data:
+            try:
+                c = map_chord(o.value)
+            except Exception:
+                continue
+            if c is None or c[0] is None or any(x is None for x in c[1:12]):
+                continue
+            d = float(o.duration or 0)
+            if d <= 0:
+                continue
+            root = int(c[0]) % 12
+            kind = tuple(1 if int(x) else 0 for x in c[1:12])
+            here = next((t for s, e, t in spans if s <= o.time < e), q0)
+            a += d * degree_reading((root - q0) % 12, kind)
+            b += d * degree_reading((root - here) % 12, kind)
+            w += d
+        if w > 0:
+            opening.append(a / w)
+            local.append(b / w)
+    A, B = np.array(opening), np.array(local)
+    unmoved = (np.abs(A - B).sum(axis=1) < 1e-9).mean()
+    return 100 * unmoved, np.abs(A.mean(0) - B.mean(0)).sum()
 
 
 def main():
@@ -106,6 +177,12 @@ def main():
         assert round(r, 3) >= 0.999, (
             f"the two weightings no longer agree to 0.999 in the {where} corpus, "
             "which Section 6.1 says they do")
+
+    unmoved, shift = local_tonic_shift(read)
+    print(f"\n   under locally annotated tonics: {unmoved:.1f}% of works "
+          f"unchanged, corpus mean shifted {shift:.4f} in l1")
+    values["works_unmoved"] = f"{unmoved:.1f}"
+    values["local_shift"] = f"{shift:.3f}"
 
     export("the-representation-of-a-work", values)
 
