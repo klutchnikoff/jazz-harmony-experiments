@@ -19,7 +19,7 @@ simplification costs.  Both are checked here.
                        all and the corpus mean shifts by 0.029 in l1, which is a
                        fifth of the gap Section 6.2 measures between repertoires.
 
-  the weighting        Duration against chord count.  The subsection claims the
+  the weighting        Duration against chord count.  Section 6 claims the
                        choice is immaterial, and the correlation between the two
                        mean representations is asserted rather than exported,
                        0.999 being a number the manuscript rounds.
@@ -176,7 +176,7 @@ def main():
               f"count r = {r:.4f}")
         assert round(r, 3) >= 0.999, (
             f"the two weightings no longer agree to 0.999 in the {where} corpus, "
-            "which Section 6.1 says they do")
+            "which Section 6 says they do")
 
     unmoved, shift = local_tonic_shift(read)
     print(f"\n   under locally annotated tonics: {unmoved:.1f}% of works "
