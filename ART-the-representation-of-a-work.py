@@ -59,7 +59,14 @@ def represent(song, by_duration=True):
 def main():
     if not MODULATION.exists():
         raise RuntimeError(f"{MODULATION} is missing; run common_practice_audit.py")
+    songs, _titles, ids, _styles, n_jazz = load_corpus()
+    keep = key_exact(ids)
+    read = {str(i) for i, k in zip(ids, keep) if k}
+
+    # on the works Section 6 actually reads, not on all 434: the filter keeps the
+    # tonally plainer works, and their modulation figures are the lower ones
     audit = pd.read_csv(MODULATION)
+    audit = audit[audit["id"].astype(str).isin(read)]
     keys = audit["n_keys"].dropna()
     away = audit["away_share"].dropna()
     far = audit["far_share"].dropna()
@@ -73,7 +80,7 @@ def main():
         "far_share": f"{100 * far.mean():.1f}",
         "no_far": f"{100 * (far < 1e-9).mean():.1f}",
     }
-    print(f"\n{len(audit)} common-practice works")
+    print(f"\n{len(audit)} common-practice works, those Section 6 reads")
     print(f"   keys per work: median {keys.median():.0f}, mean {keys.mean():.1f}, "
           f"max {int(keys.max())}")
     print(f"   carrying a single key            {100 * (keys == 1).mean():5.1f}%")
@@ -81,8 +88,6 @@ def main():
     print(f"   of which a third or a tone away   {100 * far.mean():5.1f}%")
     print(f"   works with no distant modulation  {100 * (far < 1e-9).mean():5.1f}%")
 
-    songs, _titles, ids, _styles, n_jazz = load_corpus()
-    keep = key_exact(ids)
     by_duration, by_count = {"jazz": [], "cp": []}, {"jazz": [], "cp": []}
     for n, (song, k) in enumerate(zip(songs, keep)):
         if not k:
