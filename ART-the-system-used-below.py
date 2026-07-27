@@ -37,12 +37,29 @@ def integer_form(row):
     return denominator, ",".join(str(n) for n in numerators)
 
 
+def assert_brightness_order(rows):
+    """Each diatonic support is the one above it with a single degree lowered.
+
+    Section 3.3 defines brighter and darker by that ordering and by nothing else,
+    so the table's order is a claim and not a convenience.
+    """
+    supports = [{i + 1 for i, x in enumerate(row) if x > 0} for _, row in rows[:7]]
+    for above, below in zip(supports, supports[1:]):
+        gone, came = above - below, below - above
+        assert len(gone) == len(came) == 1, (
+            f"the supports differ by {len(gone)} degrees, not one")
+        assert came.pop() == gone.pop() - 1, (
+            "the degree that changes is not lowered by a semitone")
+
+
 def main():
     order = [DIATONIC_MODE_NAMES.index(m) for m in BRIGHT]
     rows = [(m, np.asarray(W_DIATONIC, float)[j])
             for m, j in zip(BRIGHT, order)]
     rows.append(("Whole-tone", np.asarray(W_MESSIAEN, float)[0]))
     rows.append(("Octatonic", np.asarray(W_MESSIAEN, float)[1]))
+
+    assert_brightness_order(rows)
 
     words = {7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven"}
     values = {"system_size": f"{words[len(rows)]} modes"}
