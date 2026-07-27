@@ -10,8 +10,8 @@ Two panels, stacked, sharing one story.
 
   below   The 32 kinds read at p = 0.15, one column each, nine modes down the
           rows.  Every column sums to one, so a column is a reading.  The mode
-          carrying the largest share is boxed in red, and four kinds carry two
-          boxes: their maximum is attained twice.
+          carrying the largest share is boxed in red, or in orange when the
+          largest share is attained more than once, as it is for four kinds.
 
 The kinds run by family and, within a family, by the symbols they account for in
 the jazz corpus, as in Table 1.  They are labelled without their root, the table
@@ -32,6 +32,8 @@ from figure_style import HEATMAP_CMAP, save_article_figure
 from vocabulary import build, corpus_counts, family, name, FAMILIES
 
 ORDER = 0.15
+SOLE = "#c0392b"    # a maximum attained once
+TIED = "#e08214"    # attained more than once
 OUT = Path(__file__).resolve().parents[1] / "TeX" / "fig"
 
 WIDTH = 6.0
@@ -130,18 +132,21 @@ def main():
                    interpolation="nearest")
     # every cell attaining the maximum, not argmax: four kinds have no single
     # top mode, Dorian and Phrygian carrying the same weights permuted over the
-    # intervals of a minor seventh, and a box on one of them would be arbitrary
+    # intervals of a minor seventh, and a box on one of them would be arbitrary.
+    # Orange marks those, so that a tie reads as a tie and not as two winners.
     for column, col in enumerate(P):
-        for row in np.flatnonzero(col >= col.max() - 1e-12):
+        rows = np.flatnonzero(col >= col.max() - 1e-12)
+        edge = TIED if len(rows) > 1 else SOLE
+        for row in rows:
             hm.add_patch(Rectangle((column - 0.5, row - 0.5), 1, 1, fill=False,
-                                   edgecolor="#c0392b", lw=1.0, zorder=3))
+                                   edgecolor=edge, lw=1.0, zorder=3))
     # the five families are separated but not named: the kind symbols below say
     # which is which, and labels over the three narrow blocks collide
     for column, k in enumerate(vocab):
         want = PAIRING.get(name(k))
         if want is not None:
             hm.plot(column, MODES.index(want), "o", ms=2.6,
-                    color="#c0392b", zorder=4)
+                    color=SOLE, zorder=4)
     for e in edges:
         hm.axvline(e - 0.5, color="0.35", lw=0.8)
     hm.set_yticks(range(9))
