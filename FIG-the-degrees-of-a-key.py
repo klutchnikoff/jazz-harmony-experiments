@@ -134,7 +134,7 @@ def main():
 
     draw([("C major", C_MAJOR), ("A minor", A_MINOR)], norm, "degrees-of-a-key")
     draw([("chromatic in C major", C_CHROMATIC),
-          ("altered in A minor", A_ALTERED)], norm, "borrowed-degrees")
+          ("chromatic in A minor", A_ALTERED)], norm, "borrowed-degrees")
 
 
 if __name__ == "__main__":
