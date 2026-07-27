@@ -26,7 +26,7 @@ import numpy as np
 from matplotlib.colors import PowerNorm
 from matplotlib.patches import Rectangle
 
-from chord_scale import SYSTEM, MODES
+from chord_scale import SYSTEM, MODES, PAIRING
 from figure_style import HEATMAP_CMAP, save_article_figure
 from vocabulary import build, corpus_counts, family, name, FAMILIES
 
@@ -57,11 +57,15 @@ def separation(P):
 
 def main():
     tokens = corpus_counts()[0]["jazz"]
-    vocab = [k for fam in FAMILIES
-             for k in sorted(build()[0], key=lambda k: -tokens[k])
-             if family(k) == fam]
-    edges = np.cumsum([sum(1 for k in vocab if family(k) == f)
-                       for f in FAMILIES])[:-1]
+    # grouped by the mode each kind reads, so the boxed cells descend a
+    # staircase and the classes of the reading are visible as blocks; the
+    # families of Table 1 stay legible in the symbols themselves
+    all_kinds = build()[0]
+    top_of = {k: int(np.argmax(readings([k], ORDER)[0])) for k in all_kinds}
+    vocab = sorted(all_kinds, key=lambda k: (top_of[k], -tokens[k]))
+    edges = np.cumsum([sum(1 for k in vocab if top_of[k] == j)
+                       for j in range(9)])
+    edges = [e for e in edges[:-1] if 0 < e < len(vocab)]
 
     grid = np.geomspace(0.02, 1.0, 120)
     concentration, gaps = [], []
@@ -90,8 +94,10 @@ def main():
     ax.plot(grid, concentration, color="#1f4e79", lw=1.4,
             label="concentration")
     ax.plot(grid, gaps, color="#b03a2e", lw=1.4, label="separation")
+    ax.axvspan(0.02, crossing, color="0.92", zorder=0, lw=0)
     ax.axhline(floor, color="0.45", lw=0.7, ls=(0, (4, 3)))
-    ax.axvline(crossing, color="0.45", lw=0.7, ls=(0, (1, 2)))
+    ax.plot([crossing], [floor], "o", ms=5, mfc="white", mec="0.25", mew=1.1,
+            zorder=4)
     ax.plot([ORDER], [np.interp(ORDER, grid, concentration)], "o",
             ms=4, color="#1f4e79")
     ax.plot([ORDER], [np.interp(ORDER, grid, gaps)], "o", ms=4,
@@ -105,10 +111,12 @@ def main():
     ax.tick_params(length=2, pad=2)
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
-    ax.annotate("floor set by $\\Phi_1$", (0.033, floor), fontsize=7,
-                color="0.35", va="bottom")
-    ax.annotate(f"{crossing:.3f}", (crossing, 0.60), fontsize=7,
-                color="0.35", ha="right", va="top")
+    ax.annotate("separation at $p=1$", (0.92, floor - 0.012), fontsize=7,
+                color="0.35", va="top")
+    ax.annotate(f"$p={crossing:.3f}$", (crossing * 0.94, floor + 0.035),
+                fontsize=7, color="0.25", ha="right", va="bottom")
+    ax.annotate("orders ruled out", (0.028, 0.35), fontsize=7, color="0.45",
+                ha="left", va="center")
     ax.legend(frameon=False, fontsize=8, loc="upper left",
               handlelength=1.4, borderaxespad=0.2)
 
@@ -124,6 +132,11 @@ def main():
                                edgecolor="#c0392b", lw=1.0, zorder=3))
     # the five families are separated but not named: the kind symbols below say
     # which is which, and labels over the three narrow blocks collide
+    for column, k in enumerate(vocab):
+        want = PAIRING.get(name(k))
+        if want is not None:
+            hm.plot(column, MODES.index(want), "o", ms=2.6,
+                    color="#c0392b", zorder=4)
     for e in edges:
         hm.axvline(e - 0.5, color="0.35", lw=0.8)
     hm.set_yticks(range(9))
