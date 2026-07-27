@@ -10,7 +10,8 @@ Two panels, stacked, sharing one story.
 
   below   The 32 kinds read at p = 0.15, one column each, nine modes down the
           rows.  Every column sums to one, so a column is a reading.  The mode
-          carrying the largest share of a kind is boxed in red.
+          carrying the largest share is boxed in red, and four kinds carry two
+          boxes: their maximum is attained twice.
 
 The kinds run by family and, within a family, by the symbols they account for in
 the jazz corpus, as in Table 1.  They are labelled without their root, the table
@@ -127,9 +128,13 @@ def main():
     norm = PowerNorm(gamma=0.55, vmin=0, vmax=P.max())
     im = hm.imshow(P.T, cmap=HEATMAP_CMAP, aspect="equal", norm=norm,
                    interpolation="nearest")
-    for column, row in enumerate(P.argmax(axis=1)):
-        hm.add_patch(Rectangle((column - 0.5, row - 0.5), 1, 1, fill=False,
-                               edgecolor="#c0392b", lw=1.0, zorder=3))
+    # every cell attaining the maximum, not argmax: four kinds have no single
+    # top mode, Dorian and Phrygian carrying the same weights permuted over the
+    # intervals of a minor seventh, and a box on one of them would be arbitrary
+    for column, col in enumerate(P):
+        for row in np.flatnonzero(col >= col.max() - 1e-12):
+            hm.add_patch(Rectangle((column - 0.5, row - 0.5), 1, 1, fill=False,
+                                   edgecolor="#c0392b", lw=1.0, zorder=3))
     # the five families are separated but not named: the kind symbols below say
     # which is which, and labels over the three narrow blocks collide
     for column, k in enumerate(vocab):

@@ -168,27 +168,73 @@ def _annotated_collection(label):
     return collection_tonic(note, mode)
 
 
-def _audit_table():
-    """The key audit, with the guards both filters need."""
-    audit_path = CACHE_DIR / "key_audit.csv"
-    if not audit_path.exists():
-        raise RuntimeError(
-            f"{audit_path} is missing; run key_audit.py first "
-            "(generate_all.py already orders it before the corpus figures)"
-        )
-    producer = Path(__file__).resolve().parent / "key_audit.py"
-    if producer.exists() and producer.stat().st_mtime > audit_path.stat().st_mtime:
-        raise RuntimeError(
-            f"{audit_path} is older than key_audit.py; re-run key_audit.py, "
-            "or the filters below rest on a superseded analysis"
-        )
-    audit = pd.read_csv(audit_path)
-    if "id" not in audit.columns:
-        raise RuntimeError(
-            f"{audit_path} predates the switch to stable ids; delete it and "
-            "re-run key_audit.py"
-        )
-    return audit
+def classify(annot, est):
+    """How an annotated key stands to an estimated one.
+
+    Lives here rather than in key_audit.py because both producers need it and
+    that module does its whole analysis at import time.
+
+      exact     same tonic, same mode -- what the key-dependent sections require
+      relative  the annotation names the relative major or minor of the estimate,
+                so the collection agrees and only the centre is in dispute
+      parallel  same tonic, opposite mode
+      fifth     tonics a fourth or fifth apart
+      other     anything else
+    """
+    (apc, amode), (epc, emode, _) = annot, est
+    if apc == epc and amode == emode:
+        return "exact"
+    if emode == "minor" and amode == "major" and apc == (epc + 3) % 12:
+        return "relative"
+    if emode == "major" and amode == "minor" and apc == (epc + 9) % 12:
+        return "relative"
+    if apc == epc:
+        return "parallel"
+    if (apc - epc) % 12 in (5, 7):
+        return "fifth"
+    return "other"
+
+
+AUDITS = {
+    "key_audit.csv": "key_audit.py",                       # the Real Book
+    "common_practice_key_audit.csv": "common_practice_key_audit.py",
+}
+
+
+def _audit_table(required=False):
+    """The key audits of both corpora, concatenated, with their guards.
+
+    The two producers run separately, so a missing table is not fatal unless
+    every one is missing; a song absent from what was loaded is simply not
+    corroborated, which errs towards excluding it.  The freshness guard is not
+    optional, a filter resting on an audit older than its producer being worse
+    than no filter at all.
+    """
+    frames = []
+    for name, producer_name in AUDITS.items():
+        audit_path = CACHE_DIR / name
+        if not audit_path.exists():
+            if required:
+                raise RuntimeError(
+                    f"{audit_path} is missing; run {producer_name} first"
+                )
+            continue
+        producer = Path(__file__).resolve().parent / producer_name
+        if producer.exists() and producer.stat().st_mtime > audit_path.stat().st_mtime:
+            raise RuntimeError(
+                f"{audit_path} is older than {producer_name}; re-run it, "
+                "or the filters below rest on a superseded analysis"
+            )
+        frame = pd.read_csv(audit_path)
+        if "id" not in frame.columns:
+            raise RuntimeError(
+                f"{audit_path} predates the switch to stable ids; delete it "
+                f"and re-run {producer_name}"
+            )
+        frames.append(frame)
+    if not frames:
+        raise RuntimeError("no key audit found; run the producers first")
+    return pd.concat(frames, ignore_index=True)
 
 
 def key_reliable(song_ids):

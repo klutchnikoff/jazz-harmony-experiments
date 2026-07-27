@@ -33,6 +33,7 @@ from music21 import chord as m21chord
 from music21 import stream
 
 from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
+from corpus import classify
 from leadsheetanalyser.constants import NOTE_TO_PC
 
 OUT = cache_directory() / "key_audit.csv"
@@ -64,19 +65,6 @@ def estimate_key(prog):
     return k.tonic.pitchClass, k.mode, float(k.correlationCoefficient)
 
 
-def classify(annot, est):
-    (apc, amode), (epc, emode, _) = annot, est
-    if apc == epc and amode == emode:
-        return "exact"
-    if emode == "minor" and amode == "major" and apc == (epc + 3) % 12:
-        return "relative"          # annotation is the relative major
-    if emode == "major" and amode == "minor" and apc == (epc + 9) % 12:
-        return "relative"          # annotation is the relative minor
-    if apc == epc:
-        return "parallel"
-    if (apc - epc) % 12 in (5, 7):
-        return "fifth"
-    return "other"
 
 
 SOURCE = DATA_ROOT / "music_realbook.pkl"
