@@ -69,11 +69,28 @@ def main():
     # Section 2.3 says a 90 % cut would leave no suspended kind, and that
     # thirteen of the thirty-two come from the completion.  Both were computed
     # here and neither was exported, so neither was checked.
-    at_ninety = families_at(0.90, tokens, in_songs)[0]
+    spelled_small = {13: "thirteen", 19: "Nineteen", 20: "Twenty",
+                     21: "Twenty-one"}
+
+    # Section 2.3 makes both claims of the segment itself, before completion,
+    # which is the stronger form: at 95 % the twenty kinds already hold every
+    # family, at 90 % the thirteen hold no suspended one.
+    def segment(coverage):
+        total, cum, out = sum(tokens["jazz"].values()), 0, []
+        for k, n in tokens["jazz"].most_common():
+            cum += n
+            out.append(k)
+            if cum / total >= coverage:
+                return out
+        return out
+
+    at_ninety = {family(k) for k in segment(0.90)}
     assert "Suspended" not in at_ninety, (
-        "a 90 % cut now retains a suspended kind, which Section 2.3 denies")
-    assert len(FAMILIES) == len(families_at(COVERAGE, tokens, in_songs)[0]), (
-        "the 95 % cut no longer reaches all five families")
+        "a 90 % segment now holds a suspended kind, which Section 2.3 denies")
+    assert set(FAMILIES) == {family(k) for k in segment(COVERAGE)}, (
+        "the 95 % segment no longer holds every family")
+    values["segment_size"] = f"{spelled_small[len(segment(COVERAGE))]} kinds meet"
+    values["segment_at_ninety"] = f"{spelled_small[len(segment(0.90))]} kinds and no"
     spelled = {12: "Twelve", 13: "Thirteen", 14: "Fourteen", 15: "Fifteen"}
     values["from_completion"] = f"{spelled[len(added)]} of the thirty-two"
 
