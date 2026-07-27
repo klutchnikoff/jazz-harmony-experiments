@@ -18,8 +18,11 @@ states the same two statistics at p = 1 and p = 0.
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-order-used-below.py
 """
 import itertools
+from decimal import Decimal, getcontext
+from fractions import Fraction
 
 import numpy as np
+from scipy.spatial.distance import pdist
 
 from article_data import export
 from chord_scale import SYSTEM
@@ -44,6 +47,32 @@ def measure(vocab, p):
              for a, b in itertools.combinations(range(len(vocab)), 2))
     gap, a, b = min(pairs)
     return np.median(P.max(axis=1)), gap, (name(vocab[a]), name(vocab[b]))
+
+
+def exact_readings(vocab, p, digits=60):
+    """The readings again, in `digits`-place decimal arithmetic.
+
+    Section 4.5 rests on a separation being strictly positive, which is a claim
+    float64 alone should not carry.  The standard library suffices: a power is
+    exp(p log w), and Decimal has both.
+    """
+    getcontext().prec = digits
+    def dec(x):
+        f = Fraction(x).limit_denominator(10 ** 6)
+        return Decimal(f.numerator) / Decimal(f.denominator)
+    W = [[dec(x) for x in row] for row in SYSTEM]
+    order, inverse = dec(p), 1 / dec(p)
+    rows = []
+    for k in vocab:
+        intervals = [i for i in range(11) if k[i]]
+        m = []
+        for j in range(9):
+            mean = sum((order * W[j][i].ln()).exp()
+                       for i in intervals) / Decimal(len(intervals))
+            m.append((inverse * mean.ln()).exp())
+        total = sum(m)
+        rows.append([x / total for x in m])
+    return rows
 
 
 def main():
@@ -73,6 +102,21 @@ def main():
             np.array([np.prod(SYSTEM[:, [i for i in range(11) if k[i]]], axis=1)
                       ** (1 / sum(k)) for k in vocab])).max(axis=1))
     assert gap_chosen > floor, "the chosen order does not clear the floor"
+
+    # a positive separation is injectivity, so this settles that the chosen
+    # order is none of the exceptions Proposition 4.2 has to allow for
+    E = exact_readings(vocab, ORDER)
+    exact_gap = min(sum(abs(a - b) for a, b in zip(E[i], E[j]))
+                    for i, j in itertools.combinations(range(len(E)), 2))
+    assert exact_gap > 0, f"Phi_{ORDER} is not injective on K_0"
+    print(f"at 60 decimal places the separation over K_0 is {exact_gap:.6e}")
+
+    # and over all of K minus zero, where the closest pair is far tighter
+    every = [b for b in itertools.product((0, 1), repeat=11) if any(b)]
+    closest = pdist(profiles(every, ORDER), "cityblock").min()
+    assert closest > 1e-9, "a collision among the nonzero kinds"
+    print(f"over all {len(every)} nonzero kinds the closest pair is "
+          f"{closest:.4e} apart")
     print(f"the pair binding the choice at p = {ORDER} is "
           f"{pair_chosen[0]}/{pair_chosen[1]}, at {gap_chosen:.4f} "
           f"against a floor of {floor:.4f}")
