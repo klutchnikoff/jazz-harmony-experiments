@@ -29,6 +29,9 @@ def families_at(coverage, tokens, in_songs):
 def main():
     vocab, seed, added, outside, tokens, in_songs = build()
 
+    assert all(family(k) in FAMILIES for k in vocab), (
+        "the vocabulary now contains an unclassified kind")
+
     # Section 2.1 prints the kind of a dominant seventh in full, which is a
     # claim about the interval convention and not an illustration: the ones sit
     # at the major third, the perfect fifth, and the minor seventh.

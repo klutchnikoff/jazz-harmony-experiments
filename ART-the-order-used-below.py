@@ -13,7 +13,9 @@ the threshold by 13 per cent where 0.14 would clear it by 0.7 per cent.
 
 Both are printed at the orders the subsection names, and the crossing is found by
 bisection.  The medians are exported to two decimals, matching Section 4.2, which
-states the same two statistics at p = 1 and p = 0.
+states the same two statistics at p = 1 and p = 0.  The script also checks the
+two counts used to describe the lower panel of Figure 1: unique maxima and
+agreement of those maxima with the scale pairings.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-order-used-below.py
 """
@@ -25,7 +27,7 @@ import numpy as np
 from scipy.spatial.distance import pdist
 
 from article_data import export
-from chord_scale import SYSTEM
+from chord_scale import MODES, PAIRING, SYSTEM
 from vocabulary import build, name
 
 ORDER = 0.15
@@ -97,6 +99,22 @@ def main():
 
     c_one, _, _ = measure(vocab, 1.0)
     c_chosen, gap_chosen, pair_chosen = measure(vocab, ORDER)
+    chosen_profiles = profiles(vocab, ORDER)
+    maxima = [
+        set(np.flatnonzero(row >= row.max() - 1e-12))
+        for row in chosen_profiles
+    ]
+    unique_maxima = sum(len(indices) == 1 for indices in maxima)
+    paired = [
+        (index, MODES.index(PAIRING[name(k)]))
+        for index, k in enumerate(vocab)
+        if name(k) in PAIRING
+    ]
+    paired_at_maximum = sum(mode in maxima[index] for index, mode in paired)
+    assert len(paired) == 16
+    assert unique_maxima == 28
+    assert paired_at_maximum == 15
+
     c_zero = np.median(
         (lambda P: P / P.sum(axis=1, keepdims=True))(
             np.array([np.prod(SYSTEM[:, [i for i in range(11) if k[i]]], axis=1)
@@ -130,6 +148,8 @@ def main():
         "separation_floor": f"{floor:.3f}",
         "separation_peak": f"{measure(vocab, peak)[1]:.3f}",
         "crossing": f"{hi:.3f}",
+        "unique_maxima": "Twenty-eight have a unique largest coordinate",
+        "paired_at_maximum": "fifteen of them",
     })
 
 

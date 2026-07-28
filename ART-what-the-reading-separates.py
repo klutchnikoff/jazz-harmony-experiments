@@ -1,23 +1,21 @@
-"""Article data for Section 4.4, "What the reading separates".
+"""Article data for Section 4.3, "Injectivity".
 
-Every step of Lemma 4.1 and Proposition 4.2 that the reader is asked to take on
-a computation is checked here, in exact rational arithmetic.
+Every finite computation used in the proofs is checked here in exact rational
+arithmetic.
 
-  rank nine        Scaling each row by its denominator turns W_0 into the
-                   integer matrix of numerators in Table 2.  Its columns
-                   1,2,3,4,5,8,9,10,11 have determinant -2, so the rank is nine
-                   and the kernel is a plane.  On 70 W_0 the same minor would
-                   read -230592040, which is why the article rescales row by row.
-  the kernel       W_0 u = W_0 v = 0, the eighteen dot products of the proof,
-                   and u, v independent, so they span that plane.
-  five values      Every nonzero a u + b v takes at least five distinct nonzero
-                   values, tested on the two cases the proof distinguishes.
-  injectivity      Phi_1 separates the 2047 nonzero kinds, which is the first
-                   part of the proposition over all of K minus zero rather than
-                   over the vocabulary.
+  six rows         Their numerators contain no 4.  Their four occurrences of 3
+                   and the selected coefficients of 2 and 1 give exactly the
+                   eleven equations used in Proposition 4.1.  Those equations
+                   have rank eleven.
+  linear order     Clearing the row denominators gives an integer matrix of rank
+                   nine.  The stated u and v belong to its kernel and are
+                   independent, so they form a basis.
+  distinct values  The two cases in the proof give respectively five and six
+                   distinct nonzero values.
+  exhaustive check Phi_1 separates all 2047 nonzero kinds.
 
-Exports only what the manuscript prints: the two kernel vectors, the columns of
-the minor, its determinant, and the coordinate lists of the two cases.
+Exports only the two kernel vectors and the coordinate lists printed in the
+manuscript.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-what-the-reading-separates.py
 """
@@ -32,7 +30,27 @@ from chord_scale import SYSTEM
 
 U = [-3, -5, -1, 0, 0, 0, 1, 5, 3, 0, 0]
 V = [-32, -40, 8, 3, -15, -2, 8, 24, 0, 15, 24]
-MINOR = (1, 2, 3, 4, 5, 8, 9, 10, 11)
+
+
+def indicator(*coordinates):
+    """Row vector selecting one-based interval coordinates."""
+    return [int(i + 1 in coordinates) for i in range(11)]
+
+
+# The eleven coefficient equations used to prove delta = 0.
+ELIMINATION = [
+    indicator(3),
+    indicator(4),
+    indicator(6),
+    indicator(7),
+    indicator(7, 9),
+    indicator(7, 10),
+    indicator(1, 3),
+    indicator(2, 3, 7, 8),
+    indicator(4, 5, 7, 11),
+    indicator(2, 9),
+    indicator(5, 10),
+]
 
 
 def exact_system():
@@ -49,36 +67,79 @@ def exact_system():
     return rows, numerators
 
 
-def determinant(matrix):
-    """Exact determinant by fraction-free elimination."""
+def rank(matrix):
+    """Exact row rank over the rationals."""
     a = [[Fraction(x) for x in row] for row in matrix]
-    n, det = len(a), Fraction(1)
-    for c in range(n):
-        pivot = next((r for r in range(c, n) if a[r][c] != 0), None)
+    n_rows, n_cols = len(a), len(a[0])
+    pivot_row = 0
+    for column in range(n_cols):
+        pivot = next(
+            (row for row in range(pivot_row, n_rows)
+             if a[row][column] != 0),
+            None,
+        )
         if pivot is None:
-            return Fraction(0)
-        if pivot != c:
-            a[c], a[pivot] = a[pivot], a[c]
-            det = -det
-        det *= a[c][c]
-        for r in range(c + 1, n):
-            factor = a[r][c] / a[c][c]
-            for k in range(c, n):
-                a[r][k] -= factor * a[c][k]
-    return det
+            continue
+        a[pivot_row], a[pivot] = a[pivot], a[pivot_row]
+        scale = a[pivot_row][column]
+        a[pivot_row] = [entry / scale for entry in a[pivot_row]]
+        for row in range(n_rows):
+            if row == pivot_row or a[row][column] == 0:
+                continue
+            scale = a[row][column]
+            a[row] = [
+                entry - scale * pivot_entry
+                for entry, pivot_entry in zip(a[row], a[pivot_row])
+            ]
+        pivot_row += 1
+        if pivot_row == n_rows:
+            break
+    return pivot_row
+
+
+def assert_prime_power_proof(numerators):
+    """Check the coefficient equations in the 1, 2^p, 3^p proof."""
+    first_six = numerators[:6]
+    assert all(4 not in row for row in first_six)
+
+    beta_locations = {
+        (row, column)
+        for row in range(6)
+        for column in range(11)
+        if numerators[row][column] == 3
+    }
+    assert beta_locations == {(0, 5), (2, 3), (3, 2), (5, 6)}
+    assert {
+        tuple(indicator(column + 1))
+        for _, column in beta_locations
+    } == {tuple(row) for row in ELIMINATION[:4]}
+
+    alpha_equations = [
+        indicator(*(i + 1 for i, entry in enumerate(numerators[row])
+                    if entry == 2))
+        for row in (3, 2, 5, 4, 1)
+    ]
+    rational_equations = [
+        indicator(*(i + 1 for i, entry in enumerate(numerators[row])
+                    if entry == 1))
+        for row in (1, 4)
+    ]
+    assert alpha_equations == ELIMINATION[4:9]
+    assert rational_equations == ELIMINATION[9:]
+    assert rank(ELIMINATION) == 11
+    print("prime-power proof: six row patterns and rank-11 elimination verified")
 
 
 def main():
     W, N = exact_system()
-
-    det = determinant([[N[r][c - 1] for c in MINOR] for r in range(9)])
-    assert det != 0, "the stated minor is singular, so the rank claim fails"
+    assert_prime_power_proof(N)
+    assert rank(N) == 9, "the integer matrix does not have rank nine"
     assert np.linalg.matrix_rank(SYSTEM) == 9, "W_0 is not of rank nine"
-    print(f"minor on columns {','.join(map(str, MINOR))}: determinant {det}")
+    print("the row-rescaled integer matrix has rank nine")
 
     for name, vec in (("u", U), ("v", V)):
-        products = [sum(W[j][i] * vec[i] for i in range(11)) for j in range(9)]
-        assert all(p == 0 for p in products), f"W_0 {name} is not zero: {products}"
+        products = [sum(N[j][i] * vec[i] for i in range(11)) for j in range(9)]
+        assert all(p == 0 for p in products), f"B_1 {name} is not zero: {products}"
     print(f"the eighteen dot products vanish exactly")
 
     # u and v are independent, so the plane they span is the whole kernel
@@ -110,9 +171,7 @@ def main():
     export("what-the-reading-separates", {
         "kernel_u": ",".join(map(str, U)),
         "kernel_v": ",".join(map(str, V)),
-        "minor_columns": ",".join(map(str, MINOR)),
-        "minor_determinant": str(det),
-        # the coordinate lists the two cases of the lemma produce
+        # the coordinate lists produced by the two cases at p = 1
         "case_b": ",".join(f"{c}b" for c in case_b).replace("1b", "b"),
         "case_a": ",".join(f"{c}a" for c in case_a).replace("1a", "a"),
     })

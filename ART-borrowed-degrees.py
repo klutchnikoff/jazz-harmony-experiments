@@ -12,9 +12,11 @@ is.  The subdominant seventh brings the minor third to a key that keeps its
 major sixth, which is Dorian.  They were written down after the readings were
 computed, though, so they corroborate where the pairings of Section 4 test.
 
-The minor key's alterations are checked in the same way, with one difference:
-where the prediction is None the assertion asks only that Ionian be among the
-maxima, which is the fallback the subsection describes and not a success.
+The minor key's alterations are checked against their complete sets of
+maximizing modes.  This matters for the Dorian supertonic, which ties Ionian,
+and for the diminished seventh on the raised leading note, which ties Ionian
+and Aeolian.  Neither tie should be hidden by an assertion that checks only
+that one named mode occurs among the maxima.
 
 Exports only the two ends of the Aeolian run, the five degrees between them
 being covered by the assertion rather than by a number in the text.
@@ -56,6 +58,16 @@ ALTERED = [
     ("Picardy tonic", 0, MAJ7, "Ionian"),
 ]
 
+ALTERED_MAXIMA = {
+    "minor dominant seventh": ["Ionian"],
+    "diminished seventh on the leading note": ["Ionian", "Aeolian"],
+    "Dorian supertonic": ["Ionian", "Dorian"],
+    "Neapolitan": ["Phrygian"],
+    "Dorian subdominant seventh": ["Dorian"],
+    "tonic sixth": ["Dorian"],
+    "Picardy tonic": ["Ionian"],
+}
+
 
 def reading(offset, kind):
     content = {(offset + i) % 12 for i in (0,) + tuple(kind)} | {0}
@@ -81,16 +93,9 @@ def main():
         p = reading(offset, kind)
         top = [MODES[j] for j in range(9) if p[j] >= p.max() - 1e-12]
         print(f"{name:40s} {want or '--':11s} {'='.join(top):18s} {p.max():.3f}")
-        if want is None:
-            # Section 5.3 says these read Ionian, the mode whose leading note
-            # they borrow, for want of a harmonic minor among the nine
-            assert "Ionian" in top, (
-                f"the {name} reads {top} and no longer Ionian, so the fallback "
-                "Section 5.3 describes is no longer the one taken")
-        else:
-            assert want in top, (
-                f"the {name} reads {top}, and Figure 3 draws its dot outside "
-                "every box")
+        expected = ALTERED_MAXIMA[name]
+        assert top == expected, (
+            f"the {name} reads {top}, not {expected} as stated in Section 5.3")
 
     run = [shares[n] for n, _, _, _ in BORROWED]
     lo, hi = min(run), max(run)

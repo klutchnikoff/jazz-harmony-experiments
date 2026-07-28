@@ -116,10 +116,11 @@ def main():
         ax.spines[side].set_visible(False)
     ax.annotate("separation at $p=1$", (0.92, floor - 0.012), fontsize=7,
                 color="0.35", va="top")
-    ax.annotate(f"$p={crossing:.3f}$", (crossing * 0.94, floor + 0.035),
-                fontsize=7, color="0.25", ha="right", va="bottom")
-    ax.annotate("orders ruled out", (0.028, 0.35), fontsize=7, color="0.45",
-                ha="left", va="center")
+    ax.annotate(f"$p={crossing:.3f}$", (crossing, floor),
+                xytext=(4, 4), textcoords="offset points",
+                fontsize=7, color="0.25", ha="left", va="bottom")
+    ax.annotate("orders ruled out", (np.sqrt(0.02 * crossing), 0.35),
+                fontsize=7, color="0.45", ha="center", va="center")
     ax.legend(frameon=False, fontsize=8, loc="upper left",
               handlelength=1.4, borderaxespad=0.2)
 

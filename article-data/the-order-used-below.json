@@ -4,6 +4,8 @@
   "concentration_zero": "0.56",
   "crossing": "0.139",
   "order": "p=0.15",
+  "paired_at_maximum": "fifteen of them",
   "separation_floor": "0.089",
-  "separation_peak": "0.173"
+  "separation_peak": "0.173",
+  "unique_maxima": "Twenty-eight have a unique largest coordinate"
 }

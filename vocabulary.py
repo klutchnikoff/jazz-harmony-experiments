@@ -18,8 +18,9 @@ Three rules, and nothing else, decide which kinds the article works with.
 
   Families.    Each kind falls to the first applicable clause: 3 and 6 present,
                Diminished; else 4 and 8 present and 7 absent, Augmented; else 4
-               present, Major-third; else 3 present, Minor-third; otherwise
-               Suspended.  Indices are semitones above the root.
+               present, Major-third; else 3 present, Minor-third; else 2 or 5
+               present, Suspended; otherwise Unclassified.  Indices are
+               semitones above the root.
 
   Completion.  Each family gains, in one step, the kinds a member generates by
                adding or removing the ninth, by removing a seventh it contains,
@@ -84,7 +85,9 @@ def family(kind):
         return "Major-third"
     if has(3):
         return "Minor-third"
-    return "Suspended"
+    if has(2) or has(5):
+        return "Suspended"
+    return "Unclassified"
 
 
 def one_step(seed):

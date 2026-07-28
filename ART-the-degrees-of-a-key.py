@@ -20,6 +20,10 @@ divides its largest share evenly between Ionian and Dorian, and is not counted;
 counting a tie as a hit is what made an earlier tally of the chord-scale
 pairings read 15 of 16 when it was 13.
 
+The manuscript also names all four exceptions among the seventh chords.  Their
+complete sets of maximizing modes are asserted below, so the two totals cannot
+remain correct while the exceptional degrees silently change.
+
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-degrees-of-a-key.py
 """
 import numpy as np
@@ -36,6 +40,27 @@ MAJOR = [("I", 0, "maj"), ("ii", 2, "min"), ("iii", 4, "min"), ("IV", 5, "maj"),
          ("V", 7, "dom"), ("vi", 9, "min"), ("vii", 11, "dim")]
 MINOR = [("i", 0, "min"), ("ii", 2, "dim"), ("III", 3, "maj"), ("iv", 5, "min"),
          ("v", 7, "min"), ("VI", 8, "maj"), ("VII", 10, "dom")]
+
+SEVENTH_MAXIMA = {
+    "C major": {
+        "I": ["Ionian"],
+        "ii": ["Ionian", "Dorian"],
+        "iii": ["Ionian"],
+        "IV": ["Ionian"],
+        "V": ["Ionian"],
+        "vi": ["Mixolydian"],
+        "vii": ["Ionian"],
+    },
+    "A minor": {
+        "i": ["Dorian", "Phrygian"],
+        "ii": ["Aeolian"],
+        "III": ["Aeolian"],
+        "iv": ["Aeolian"],
+        "v": ["Mixolydian", "Aeolian"],
+        "VI": ["Aeolian"],
+        "VII": ["Aeolian"],
+    },
+}
 
 FORMS = {
     "triad":   {"maj": (4, 7), "min": (3, 7), "dom": (4, 7), "dim": (3, 6)},
@@ -80,6 +105,14 @@ def main():
     assert counts["A minor"]["seventh"] == 5, "the minor sevenths no longer read 5 of 7"
     assert counts["C major"]["triad"] == 3 and counts["A minor"]["triad"] == 3
     assert counts["C major"]["sixth"] == 3 and counts["A minor"]["sixth"] == 2
+
+    for key, degrees in (("C major", MAJOR), ("A minor", MINOR)):
+        for degree_label, offset, quality in degrees:
+            modes, _ = top_modes(offset, FORMS["seventh"][quality])
+            expected = SEVENTH_MAXIMA[key][degree_label]
+            assert modes == expected, (
+                f"{degree_label} in {key} reads {modes}, not {expected} as "
+                "stated in Section 5.2")
 
     modes, share = top_modes(2, MI7)          # the supertonic of a major key
     assert modes == ["Ionian", "Dorian"], f"the supertonic now reads {modes}"

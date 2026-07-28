@@ -1,19 +1,20 @@
 """Article data for Section 5.1, "Reading from the tonic".
 
-The subsection defines the degree of a chord in a key,
+The subsection defines the tonic-relative kind of a chord in a key,
 
     C_q(c) = C(r,k) + {q},    k^q_i = 1  iff  q + i in C(r,k),
 
 and states three properties of it before giving one example.  The properties are
 asserted here rather than exported, having no number in the manuscript to match:
 
-  transposition   the degree depends on r - q and k alone, so the same chord a
-                  fixed interval above two different tonics gives one degree.
+  transposition   the tonic-relative kind depends on r - q and k alone, so the
+                  same chord a fixed interval above two different tonics gives
+                  one tonic-relative kind.
   extension       q = r returns the kind itself, so Section 4 is the case of a
                   chord sitting on the tonic.
   the lost root   Ami7 and C6 in C share their pitch classes, so they share a
-                  degree.  The cost of passing through the content, and the
-                  ambiguity Section 2.1 already named.
+                  tonic-relative kind.  This is the cost of passing through the
+                  content, and the ambiguity Section 2.1 already named.
 
 Only the example carries figures: C7 read from F against C7 read from C, which
 is the whole point of the section in two numbers.
@@ -81,7 +82,8 @@ def main():
         print(f"{C7[0]:6s} {NOTES[tonic]:3s}  "
               f"{'{' + ','.join(NOTES[c] for c in whole) + '}':26s} "
               f"{str(intervals):16s} {MODES[top]} {pr[top]:.3f}")
-        values[f"c7_in_{NOTES[tonic].lower()}"] = f"{MODES[top]} at {pr[top]:.2f}"
+        values[f"c7_in_{NOTES[tonic].lower()}"] = \
+            f"{MODES[top]} with share {pr[top]:.2f}"
 
     export("reading-from-the-tonic", values)
 
