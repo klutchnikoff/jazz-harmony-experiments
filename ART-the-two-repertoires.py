@@ -53,6 +53,18 @@ SIDES = {
               "jazz": ["Dorian", "Aeolian", "Phrygian"]},
 }
 
+# One generator per key type, not one consumed in sequence: with a single stream
+# the minor-key null depends on how many draws the major-key one took, so an
+# edit anywhere above it would silently move a figure this subsection states.
+# The l1 and max-T nulls deliberately share their reallocations, both being read
+# off the same shuffles.
+SEED = 20260729
+KEY_TYPES = {"major": 0, "minor": 1}
+
+
+def stream(kappa):
+    return np.random.default_rng([SEED, KEY_TYPES[kappa]])
+
 
 def english_list(names):
     """Join the coordinate names exactly as the manuscript states them."""
@@ -163,9 +175,9 @@ def main():
     print(f"{'pooled':8s} {len(pooled['J']):6d} {len(pooled['C']):5d} "
           f"{gaps['pooled']:8.4f}")
 
-    rng = np.random.default_rng(0)
     beyond = {}
     for m in ("major", "minor"):
+        shuffle = stream(m)
         A, B = W[("J", m)], W[("C", m)]
         observed = B.mean(0) - A.mean(0)
         gaps[m] = np.abs(observed).sum()
@@ -173,7 +185,7 @@ def main():
         null_l1 = np.empty(PERMUTATIONS)
         null_max = np.empty(PERMUTATIONS)
         for t in range(PERMUTATIONS):
-            order = rng.permutation(len(both))
+            order = shuffle.permutation(len(both))
             d = both[order[len(A):]].mean(0) - both[order[:len(A)]].mean(0)
             null_l1[t] = np.abs(d).sum()
             null_max[t] = np.abs(d).max()
