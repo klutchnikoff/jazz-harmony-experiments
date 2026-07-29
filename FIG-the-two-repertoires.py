@@ -75,7 +75,11 @@ def profiles(src):
             order = rng.permutation(len(both))
             null[t] = np.abs(both[order[len(A):]].mean(0)
                              - both[order[:len(A)]].mean(0)).max()
-        marked[m] = [(null >= abs(observed[j])).mean() < 0.05 for j in range(9)]
+        marked[m] = [
+            (1 + int(np.count_nonzero(null >= abs(observed[j]))))
+            / (PERMUTATIONS + 1) < 0.05
+            for j in range(9)
+        ]
     return means, marked
 
 

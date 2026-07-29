@@ -1,14 +1,4 @@
 {
   "IIm7_contributes": "-0.019",
-  "IIm7_reads_dorian": "0.34",
-  "VM_contributes": "0.052",
-  "VM_reads_ionian": "0.50",
-  "cp_IIm7": "0.8",
-  "cp_IMmaj7": "0.1",
-  "cp_VM": "12.3",
-  "gap_dorian": "-0.022",
-  "gap_ionian": "0.021",
-  "jazz_IIm7": "6.3",
-  "jazz_IMmaj7": "4.1",
-  "jazz_VM": "1.9"
+  "VM_contributes": "0.052"
 }

@@ -2,7 +2,7 @@
   "away_share": "25.3",
   "far_share": "6.3",
   "local_shift": "0.029",
-  "median_keys": "median of seven keys",
+  "median_keys": "median of seven annotated key spans",
   "no_far": "54.7",
   "single_key": "13.5",
   "works_unmoved": "52.6"

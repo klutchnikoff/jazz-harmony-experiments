@@ -136,7 +136,12 @@ def main():
     values["gap_dorian"] = f"{gap[dorian]:.3f}"
     values["IIm7_reads_dorian"] = f"{reading[ii][dorian]:.2f}"
     values["IIm7_contributes"] = f"{delta[ii] * reading[ii][dorian]:.3f}"
-    export("what-separates-them", values)
+    # The article now reports only these two leading contributions in its
+    # conclusion.  The full decomposition remains printed above for exploration.
+    export("what-separates-them", {
+        "VM_contributes": values["VM_contributes"],
+        "IIm7_contributes": values["IIm7_contributes"],
+    })
 
 
 if __name__ == "__main__":

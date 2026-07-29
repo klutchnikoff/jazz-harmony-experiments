@@ -47,12 +47,14 @@ def manuscript_text():
 
     Only the grouping is stripped, not every comma: the manuscript writes large
     numbers as 172{,}783, so plain commas belong to vectors, and removing them
-    would make a weight such as (0,1,0,2,0,3,2,0,1,0,1) unsearchable.
+    would make a weight such as (0,1,0,2,0,3,2,0,1,0,1) unsearchable.  Runs of
+    whitespace are collapsed so a phrase remains searchable across TeX source
+    line breaks.
     """
     text = MANUSCRIPT.read_text()
     for old, new in (("{,}", ""), ("\\,", ""), ("\\(", ""), ("\\)", "")):
         text = text.replace(old, new)
-    return text
+    return " ".join(text.split())
 
 
 def occurrences(value, text):

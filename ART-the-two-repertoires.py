@@ -14,15 +14,17 @@ Every figure the subsection states, and the claims it makes that carry no number
 
   the permutation   Labels shuffled within a mode group, 20,000 times, the
                     statistic being the l1 distance between the two means.  The
-                    per-mode test uses the maximum absolute difference across
-                    the nine, which controls the family-wise rate without a
-                    correction applied afterwards.
+                    Monte Carlo p-value includes the observed labelling and is
+                    therefore never zero.  The coordinate tests use the maximum
+                    absolute difference across the nine, which controls the
+                    family-wise rate under the joint null.
 
-  the size control  Here the level changes, and the subsection says so: D_A(n)
-                    is a share of duration and psi_A(n) a mean over degrees, so
-                    the standardised comparison is between duration-weighted
-                    means over chords and not between means over works.  Its raw
-                    figures are therefore not the ones above.
+  the size control  Here the level changes, and the subsection says so:
+                    D_{R,m}(n) is a share of duration and psi_{R,m}(n) a
+                    duration-weighted conditional mean over chords.  Every size
+                    observed in the common practice also occurs in jazz, so we
+                    give jazz the common-practice size distribution.  This
+                    requires no extrapolation to sizes absent from one corpus.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-two-repertoires.py
 """
@@ -50,6 +52,13 @@ SIDES = {
     "minor": {"cp": ["Lydian", "Ionian"],
               "jazz": ["Dorian", "Aeolian", "Phrygian"]},
 }
+
+
+def english_list(names):
+    """Join the coordinate names exactly as the manuscript states them."""
+    if len(names) == 2:
+        return f"{names[0]} and {names[1]}"
+    return f"{', '.join(names[:-1])}, and {names[-1]}"
 
 
 def degree_reading(root, kind, cache={}):
@@ -168,12 +177,17 @@ def main():
             d = both[order[len(A):]].mean(0) - both[order[:len(A)]].mean(0)
             null_l1[t] = np.abs(d).sum()
             null_max[t] = np.abs(d).max()
-        p = (null_l1 >= gaps[m]).mean()
-        beyond[m] = int(sum((null_max >= abs(observed[j])).mean() < 0.05
-                            for j in range(9)))
+        exceedances = int(np.count_nonzero(null_l1 >= gaps[m]))
+        p = (exceedances + 1) / (PERMUTATIONS + 1)
+        adjusted = [
+            (1 + int(np.count_nonzero(null_max >= abs(observed[j]))))
+            / (PERMUTATIONS + 1)
+            for j in range(9)
+        ]
+        beyond[m] = int(sum(value < 0.05 for value in adjusted))
         print(f"{m:8s} {len(A):6d} {len(B):5d} {gaps[m]:8.4f} {p:9.4g}"
               f"   {beyond[m]} of nine modes beyond the family-wise 5%")
-        assert p < 1 / PERMUTATIONS, f"the {m} gap is now reachable by chance"
+        assert exceedances == 0, f"the {m} gap is now reached by a permutation"
         for name in SIDES[m]["cp"]:
             assert observed[MODES.index(name)] > 0, (
                 f"the common practice no longer carries the more {name} mass "
@@ -187,19 +201,26 @@ def main():
     print()
     standardised = {}
     for m in ("major", "minor"):
-        sizes = [n for n in range(1, 12)
-                 if chords[("J", m, n)][0] > 0 and chords[("C", m, n)][0] > 0]
+        support = {
+            c: [n for n in range(1, 12) if chords[(c, m, n)][0] > 0]
+            for c in "JC"
+        }
+        assert set(support["C"]) <= set(support["J"]), (
+            f"the common-practice {m} group now contains a chord size absent "
+            "from jazz, so the stated standardisation requires extrapolation")
         mean = {c: sum(chords[(c, m, n)][1] for n in range(1, 12))
                 / sum(chords[(c, m, n)][0] for n in range(1, 12)) for c in "JC"}
-        share = np.array([chords[("J", m, n)][0] for n in sizes])
+        share = np.array([chords[("C", m, n)][0] for n in support["C"]])
         share = share / share.sum()
-        under_jazz = sum(w * chords[("C", m, n)][1] / chords[("C", m, n)][0]
-                         for w, n in zip(share, sizes))
+        jazz_under_cp = sum(
+            w * chords[("J", m, n)][1] / chords[("J", m, n)][0]
+            for w, n in zip(share, support["C"])
+        )
         raw = np.abs(mean["C"] - mean["J"]).sum()
-        std = np.abs(under_jazz - mean["J"]).sum()
+        std = np.abs(mean["C"] - jazz_under_cp).sum()
         standardised[m] = (raw, std)
         print(f"   {m:8s} chord-level gap {raw:.6f}, "
-              f"under the jazz size mix {std:.6f}")
+              f"with jazz under the common-practice size mix {std:.6f}")
         assert std > raw, (
             f"standardising no longer widens the {m} gap, so size no longer "
             "works against the difference as Section 6.2 says")
@@ -211,8 +232,11 @@ def main():
     minor_share = {c: 100 * len(W[(c, "minor")]) / len(pooled[c]) for c in "JC"}
     export("the-two-repertoires", {
         # the checker reads the manuscript with LaTeX digit grouping stripped
-        "jazz_kept": f"{len(pooled['J'])} lead sheets",
-        "cp_kept": f"{len(pooled['C'])} works",
+        "jazz_kept":
+            f"{len(pooled['J'])} of the {n_jazz} jazz lead sheets",
+        "cp_kept":
+            f"{len(pooled['C'])} of the {len(songs) - n_jazz} "
+            "common-practice works",
         "weimar_before": f"{disagree_all} of {shared}",
         "weimar_after": f"{disagree_kept} of {kept}",
         "gap_pooled": f"{gaps['pooled']:.3f}",
@@ -224,8 +248,15 @@ def main():
         "size_std_major": f"{standardised['major'][1]:.3f}",
         "size_raw_minor": f"{standardised['minor'][0]:.3f}",
         "size_std_minor": f"{standardised['minor'][1]:.3f}",
-        "beyond_major": f"{beyond['major']} of the nine",
-        "beyond_minor": f"{beyond['minor']} of the nine",
+        "retained_major":
+            f"{english_list(SIDES['major']['cp'])} in the common-practice "
+            f"direction, and {english_list(SIDES['major']['jazz'])} in the "
+            "jazz direction",
+        "retained_minor":
+            f"{english_list(SIDES['minor']['cp'])} in the common-practice "
+            f"direction, and {english_list(SIDES['minor']['jazz'])} in the "
+            "jazz direction",
+        "permutation_floor": f"1/{PERMUTATIONS + 1}",
     })
 
 
