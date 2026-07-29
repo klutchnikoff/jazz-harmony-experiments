@@ -1,4 +1,4 @@
-"""Article data for Section 4.2, "What the two readings cost".
+"""Article data for Section 4.2, "The two extremes".
 
 The subsection sets the two extreme readings against each other on the same two
 statistics, and every figure it states is produced here.

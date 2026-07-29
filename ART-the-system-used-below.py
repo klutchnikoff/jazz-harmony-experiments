@@ -11,7 +11,7 @@ checks the support and transposition claims made for the two symmetric rows.
 Section 3.3 records what uniform weights cost: neither symmetric row carries a
 small weight, the octatonic row having besides the largest support of the nine.
 Those are claims about the system alone, so the floors are checked and exported
-here rather than where Section 4.5 measures their effect.
+here rather than where Section 4.4 measures their effect.
 
 Vectors are exported in the manuscript's own form, comma-separated and without
 spaces, which is why check_article_numbers.py strips only LaTeX digit grouping

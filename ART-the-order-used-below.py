@@ -1,4 +1,4 @@
-"""Article data for Section 4.5, "The order used below".
+"""Article data for Section 4.4, "Choosing the order".
 
 The order is fixed by a constraint rather than by taste.  Lowering p raises the
 concentration of the reading throughout, but the separation of the kinds peaks

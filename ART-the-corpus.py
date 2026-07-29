@@ -1,4 +1,4 @@
-"""Article data for Section 2.2, "The corpus".
+"""Article data for Section 2.2, "Corpora".
 
 Produces every number that subsection states, and nothing else.  Values are
 printed for reading and written to article-data/ for
