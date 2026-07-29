@@ -115,6 +115,22 @@ def main():
     assert unique_maxima == 28
     assert paired_at_maximum == 15
 
+    # What the chosen order costs.  The octatonic row, being uniform, carries
+    # no small weight and is never penalised by a low order; the major triad
+    # is where that is plainest.
+    triad = tuple(1 if i in (3, 6) else 0 for i in range(11))
+    triad_reading = profiles([triad], ORDER)[0]
+    share = dict(zip(MODES, triad_reading))
+    assert np.argmax(triad_reading) == MODES.index("Mixolydian"), (
+        "the major triad no longer reads Mixolydian first")
+    assert abs(share["Lydian"] - share["Ionian"]) < 1e-12, (
+        "Lydian and Ionian no longer weigh the major triad alike")
+    assert share["octatonic"] > max(share["Dorian"], share["Aeolian"]), (
+        "the octatonic row no longer outscores the modes that miss the triad")
+    print(f"\nthe major triad at p = {ORDER} reads "
+          + ", ".join(f"{m} {share[m]:.3f}" for m in
+                      ("Mixolydian", "Lydian", "Ionian", "octatonic")))
+
     c_zero = np.median(
         (lambda P: P / P.sum(axis=1, keepdims=True))(
             np.array([np.prod(SYSTEM[:, [i for i in range(11) if k[i]]], axis=1)
@@ -150,6 +166,9 @@ def main():
         "crossing": f"{hi:.3f}",
         "unique_maxima": "Twenty-eight have a unique largest coordinate",
         "paired_at_maximum": "fifteen of them",
+        "triad_mixolydian": f"{share['Mixolydian']:.2f}",
+        "triad_lydian_ionian": f"{share['Lydian']:.2f}",
+        "triad_octatonic": f"{share['octatonic']:.2f}",
     })
 
 

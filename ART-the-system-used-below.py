@@ -1,11 +1,17 @@
-"""Article data for Section 3.4, "The system used below".
+"""Article data for Sections 3.3 and 3.4, "Two symmetric collections" and
+"The system used below".
 
-The table of that subsection gives each mode's weights as an integer vector over
+The table of Section 3.4 gives each mode's weights as an integer vector over
 its total.  This exports those vectors, so that a weight edited in the manuscript
 without being changed in the package -- or the reverse -- is caught.
 
 The script also reconstructs the diatonic rows from the rule in Section 3.2 and
 checks the support and transposition claims made for the two symmetric rows.
+
+Section 3.3 records what uniform weights cost: neither symmetric row carries a
+small weight, the octatonic row having besides the largest support of the nine.
+Those are claims about the system alone, so the floors are checked and exported
+here rather than where Section 4.5 measures their effect.
 
 Vectors are exported in the manuscript's own form, comma-separated and without
 spaces, which is why check_article_numbers.py strips only LaTeX digit grouping
@@ -104,6 +110,24 @@ def assert_symmetric_collections(rows):
             f"unexpected number of transpositions for {name}")
 
 
+def assert_floors(rows):
+    """Section 3.3: uniform weights leave the symmetric rows without a small
+    weight, and the octatonic support is the largest of the nine."""
+    floors = {name: min(w for w in row if w > 0) for name, row in rows}
+    for name, _ in rows[:7]:
+        assert abs(floors[name] - 1 / 10) < 1e-12, (
+            f"{name} no longer has 1/10 as its smallest weight")
+    assert abs(floors["Whole-tone"] - 1 / 5) < 1e-12
+    assert abs(floors["Octatonic"] - 1 / 7) < 1e-12
+    assert min(floors["Whole-tone"], floors["Octatonic"]) > 1 / 10, (
+        "a symmetric row no longer carries the larger smallest weight")
+
+    sizes = {name: int(np.count_nonzero(row)) for name, row in rows}
+    assert all(sizes["Octatonic"] > size
+               for name, size in sizes.items() if name != "Octatonic"), (
+        "the octatonic row no longer has the largest support of the nine")
+
+
 def main():
     order = [DIATONIC_MODE_NAMES.index(m) for m in BRIGHT]
     rows = [(m, np.asarray(W_DIATONIC, float)[j])
@@ -114,6 +138,7 @@ def main():
     assert_brightness_order(rows)
     assert_diatonic_construction(rows)
     assert_symmetric_collections(rows)
+    assert_floors(rows)
 
     words = {7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven"}
     values = {
@@ -121,6 +146,9 @@ def main():
         "diatonic_modes_first": "Lydian, Ionian, Mixolydian, Dorian",
         "diatonic_modes_last": "Aeolian, Phrygian",
         "system_size": f"{words[len(rows)]} modes",
+        "floor_diatonic": "1/10",
+        "floor_whole_tone": "1/5",
+        "floor_octatonic": "1/7",
     }
     print(f"\n{'mode':12s} {'1/d':>6s}  weights")
     for name, row in rows:

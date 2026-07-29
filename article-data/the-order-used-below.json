@@ -7,5 +7,8 @@
   "paired_at_maximum": "fifteen of them",
   "separation_floor": "0.089",
   "separation_peak": "0.173",
+  "triad_lydian_ionian": "0.25",
+  "triad_mixolydian": "0.31",
+  "triad_octatonic": "0.18",
   "unique_maxima": "Twenty-eight have a unique largest coordinate"
 }
