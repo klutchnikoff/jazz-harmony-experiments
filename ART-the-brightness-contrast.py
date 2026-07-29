@@ -173,6 +173,12 @@ def main():
         # A Monte Carlo p-value is never zero, and printing 0.0000 would say it
         # is.  When no reallocation reaches the observed value, report the floor
         # of the design as Section 6.2 already does.
+        # The statistic asks for all six inequalities at once, so a null
+        # reallocation typically fails at least one of them and the null median
+        # is negative.  Section 6.3 says so, hence the check.
+        assert np.median(null) < 0, (
+            f"the {kappa}-key null median is no longer negative, so the "
+            "statistic is no longer the demanding one Section 6.3 describes")
         exceedances = int(np.count_nonzero(null >= T[:DIATONIC - 1].min()))
         p = (1 + exceedances) / (PERMUTATIONS + 1)
         p_text = (f"1/{PERMUTATIONS + 1}" if exceedances == 0
@@ -193,7 +199,7 @@ def main():
         values[f"dominance_p_{kappa}"] = p_text
         values[f"contrast_{kappa}"] = f"{contrast:.3f}"
         values[f"interval_{kappa}"] = f"[{lo:.3f}, {hi:.3f}]"
-        values[f"effect_{kappa}"] = f"{effect:.2f}"
+        values[f"effect_{kappa}"] = f"{effect:.2f} standard deviations"
 
     export("the-brightness-contrast", values)
 

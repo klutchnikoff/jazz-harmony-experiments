@@ -5,8 +5,8 @@
   "dominance_minor": "0.0067",
   "dominance_p_major": "1/20001",
   "dominance_p_minor": "0.0170",
-  "effect_major": "0.37",
-  "effect_minor": "0.95",
+  "effect_major": "0.37 standard deviations",
+  "effect_minor": "0.95 standard deviations",
   "interval_major": "[0.086, 0.163]",
   "interval_minor": "[0.297, 0.470]"
 }
