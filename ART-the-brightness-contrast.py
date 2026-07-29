@@ -3,36 +3,37 @@
 Section 6.2 measures how far apart the two mean representations are.  It does not
 say in which direction, and an l1 distance cannot: it is nonnegative by
 construction, so its null is rejected as soon as the two repertoires use
-different chords, which is certain in advance.  This subsection tests a signed
-claim instead, along the one ordering the modal system already carries.
+different chords, which is certain in advance.  This subsection looks at a signed
+quantity instead, along the one ordering the modal system already carries.
 
   the ordering    Section 3.2 fixes it, Lydian to Locrian, before any corpus is
                   read.  Nothing here chooses it, and no scale is placed on it.
 
-  the claim       T_i, the excess mass the common practice puts on the i
-                  brightest modes, is nonnegative for i = 1..6.  The masses are
-                  taken over the seven diatonic modes renormalised within each
-                  work, and T_7 vanishes, both means being distributions.  The
-                  sign convention is that of Section 6.2, common practice minus
-                  jazz, so no negation is needed anywhere.
+  the observation Delta_{i,kappa}, the excess mass the common practice puts on
+                  the i brightest modes, is positive for i = 1..6.  The masses
+                  are taken over the seven diatonic modes renormalised within
+                  each work, and Delta_{7,kappa} vanishes, both means being
+                  distributions.  The sign convention is that of Section 6.2,
+                  common practice minus jazz, so no negation is needed anywhere.
 
   why it matters  Writing a_j and b_j for the jazz and common-practice mean
                   masses, Abel summation gives, for any increasing weights,
-                  sum_j g_j (a_j - b_j) = sum_i (g_{i+1} - g_i) T_i.  The claim
-                  therefore makes the sign of the contrast independent of every
-                  scale one might place on the modes, and the left-hand side is
-                  the magnitude reported below.  The script checks that identity
-                  numerically as well as the inequality.
+                  sum_j g_j (a_j - b_j) = sum_i (g_{i+1} - g_i) Delta_{i,kappa}.
+                  The observation therefore makes the sign of the contrast
+                  independent of every scale one might place on the modes, and
+                  the left-hand side is the magnitude reported below.  The script
+                  checks that identity numerically as well as the inequality.
 
   the magnitude   Reported on one such weighting, the ranks 1..7, as a
                   difference of means with a bootstrap interval and an effect
                   size in pooled standard deviations.  The ranks carry the
-                  magnitude only; the inequality above carries the direction.
+                  magnitude only; the observation carries the direction.
 
-The two levels of evidence differ, and Section 6.3 says so: the inequality holds
-exactly on the sample, whereas its permutation test is strong among major-key
-works and merely significant among minor-key ones, where it rests on far fewer
-works and is bound by the Locrian tail.
+Observation first, inference second, as in Section 6.2.  Delta_{i,kappa} > 0 is a
+fact about this sample; the permutation test asks whether it belongs to the
+repertoires.  Rejecting says the ordered pattern is not an artefact of which
+works fell in which group -- it is not a simultaneous statement about the seven
+coordinates.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-brightness-contrast.py
 """
@@ -114,7 +115,8 @@ def profiles():
 
 
 def cuts(jazz, common):
-    """T_i, the excess mass the common practice puts on the i brightest modes.
+    """Delta_{i,kappa}, the excess mass the common practice puts on the i
+    brightest modes.
 
     For i = 1..7, the last being zero since both means are distributions.
     """
@@ -136,10 +138,10 @@ def main():
         assert np.allclose(J.sum(1), 1) and np.allclose(C.sum(1), 1), (
             "a work profile is not a distribution over the seven diatonic modes")
 
-        T = cuts(J, C)
-        assert abs(T[-1]) < 1e-12, "the two profiles do not both sum to one"
-        binding = int(np.argmin(T[:DIATONIC - 1]))
-        assert T[:DIATONIC - 1].min() > 0, (
+        Delta = cuts(J, C)
+        assert abs(Delta[-1]) < 1e-12, "the two profiles do not both sum to one"
+        binding = int(np.argmin(Delta[:DIATONIC - 1]))
+        assert Delta[:DIATONIC - 1].min() > 0, (
             f"among {kappa}-key works the bright end is no longer ahead at "
             f"every cut point")
         assert binding == DIATONIC - 2, (
@@ -149,7 +151,7 @@ def main():
         # the Abel identity Section 6.3 states, on a random increasing weighting
         d = J.mean(0) - C.mean(0)
         g = np.sort(stream("abel", kappa).uniform(0, 10, DIATONIC))
-        assert np.isclose(g @ d, np.diff(g) @ T[:DIATONIC - 1]), (
+        assert np.isclose(g @ d, np.diff(g) @ Delta[:DIATONIC - 1]), (
             "the Abel summation identity does not hold numerically")
 
         a, b = brightness(J), brightness(C)
@@ -184,23 +186,23 @@ def main():
         assert np.median(null) < 0, (
             f"the {kappa}-key null median is no longer negative, so the "
             "statistic is no longer the demanding one Section 6.3 describes")
-        exceedances = int(np.count_nonzero(null >= T[:DIATONIC - 1].min()))
+        exceedances = int(np.count_nonzero(null >= Delta[:DIATONIC - 1].min()))
         p = (1 + exceedances) / (PERMUTATIONS + 1)
         p_text = (f"1/{PERMUTATIONS + 1}" if exceedances == 0
                   else f"{p:.4f}")
 
         print(f"\n=== {kappa} keys ===  jazz {len(J)}, common practice {len(C)}")
-        print(f"{'mode':12s} {'jazz':>8s} {'cp':>8s} {'d':>9s} {'T_i':>9s}")
+        print(f"{'mode':12s} {'jazz':>8s} {'cp':>8s} {'d':>9s} {'Delta_i':>9s}")
         for i, name in enumerate(MODES[:DIATONIC]):
             print(f"{name:12s} {J.mean(0)[i]:8.4f} {C.mean(0)[i]:8.4f} "
-                  f"{d[i]:+9.4f} {T[i]:+9.4f}")
+                  f"{d[i]:+9.4f} {Delta[i]:+9.4f}")
         print(f"  binding cut {binding + 1} ({MODES[binding]}/"
-              f"{MODES[binding + 1]}), min T_i = {T[:DIATONIC - 1].min():.4f}, "
+              f"{MODES[binding + 1]}), min Delta_i = {Delta[:DIATONIC - 1].min():.4f}, "
               f"permutation p = {p_text}")
         print(f"  brightness {a.mean():.3f} against {b.mean():.3f}, contrast "
               f"{contrast:+.3f} [{lo:.3f}, {hi:.3f}], {effect:.2f} sd")
 
-        values[f"dominance_{kappa}"] = f"{T[:DIATONIC - 1].min():.4f}"
+        values[f"dominance_{kappa}"] = f"{Delta[:DIATONIC - 1].min():.4f}"
         values[f"dominance_p_{kappa}"] = p_text
         values[f"contrast_{kappa}"] = f"{contrast:.3f}"
         values[f"interval_{kappa}"] = f"[{lo:.3f}, {hi:.3f}]"
