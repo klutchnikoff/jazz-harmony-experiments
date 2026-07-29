@@ -9,17 +9,19 @@ claim instead, along the one ordering the modal system already carries.
   the ordering    Section 3.2 fixes it, Lydian to Locrian, before any corpus is
                   read.  Nothing here chooses it, and no scale is placed on it.
 
-  the claim       For every k, the common-practice mean puts at least as much
-                  mass on the k brightest modes as the jazz mean does.  Writing
-                  d_j for the difference of mean masses, jazz minus common
-                  practice, over the seven diatonic modes renormalised within
-                  each work, and T_i = -sum_{j<=i} d_j, the claim is T_i >= 0
-                  for i = 1..6.  T_7 vanishes, both being distributions.
+  the claim       T_i, the excess mass the common practice puts on the i
+                  brightest modes, is nonnegative for i = 1..6.  The masses are
+                  taken over the seven diatonic modes renormalised within each
+                  work, and T_7 vanishes, both means being distributions.  The
+                  sign convention is that of Section 6.2, common practice minus
+                  jazz, so no negation is needed anywhere.
 
-  why it matters  For any increasing weights g_1 < ... < g_7, Abel summation
-                  gives sum_j g_j d_j = sum_i (g_{i+1} - g_i) T_i, so the claim
-                  makes the sign of the contrast independent of every scale one
-                  might place on the modes.  The script checks that identity
+  why it matters  Writing a_j and b_j for the jazz and common-practice mean
+                  masses, Abel summation gives, for any increasing weights,
+                  sum_j g_j (a_j - b_j) = sum_i (g_{i+1} - g_i) T_i.  The claim
+                  therefore makes the sign of the contrast independent of every
+                  scale one might place on the modes, and the left-hand side is
+                  the magnitude reported below.  The script checks that identity
                   numerically as well as the inequality.
 
   the magnitude   Reported on one such weighting, the ranks 1..7, as a
@@ -112,8 +114,11 @@ def profiles():
 
 
 def cuts(jazz, common):
-    """T_i for i = 1..7, the last being zero."""
-    return -np.cumsum(jazz.mean(0) - common.mean(0))
+    """T_i, the excess mass the common practice puts on the i brightest modes.
+
+    For i = 1..7, the last being zero since both means are distributions.
+    """
+    return np.cumsum(common.mean(0) - jazz.mean(0))
 
 
 def brightness(P):
