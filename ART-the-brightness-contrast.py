@@ -25,9 +25,10 @@ quantity instead, along the one ordering the modal system already carries.
                   checks that identity numerically as well as the inequality.
 
   the magnitude   Reported on one such weighting, the ranks 1..7, as a
-                  difference of means with a bootstrap interval and an effect
-                  size in pooled standard deviations.  The ranks carry the
-                  magnitude only; the observation carries the direction.
+                  difference of means with a 95% percentile bootstrap interval
+                  and an effect size in pooled within-repertoire standard
+                  deviations.  The ranks carry the magnitude only; the
+                  observation carries the direction.
 
 Observation first, inference second, as in Section 6.2.  Delta_{i,kappa} > 0 is a
 fact about this sample; the permutation test asks whether it belongs to the
@@ -64,7 +65,9 @@ KEY_TYPES = {"major": 0, "minor": 1}
 
 
 def stream(purpose, kappa):
-    return np.random.default_rng([SEED, STREAMS[purpose], KEY_TYPES[kappa]])
+    return np.random.Generator(
+        np.random.PCG64([SEED, STREAMS[purpose], KEY_TYPES[kappa]])
+    )
 
 
 def annotated_modes():
@@ -159,7 +162,6 @@ def main():
         assert contrast > 0, (
             f"among {kappa}-key works the jazz mean is no longer the darker")
 
-        pooled = np.concatenate([a, b])
         draw = stream("bootstrap", kappa)
         boot = np.array([draw.choice(a, len(a), True).mean()
                          - draw.choice(b, len(b), True).mean()
@@ -167,7 +169,11 @@ def main():
         lo, hi = np.percentile(boot, [2.5, 97.5])
         assert lo > 0, (
             f"among {kappa}-key works the contrast interval now contains zero")
-        effect = contrast / pooled.std(ddof=1)
+        pooled_variance = (
+            ((len(a) - 1) * a.var(ddof=1) + (len(b) - 1) * b.var(ddof=1))
+            / (len(a) + len(b) - 2)
+        )
+        effect = contrast / np.sqrt(pooled_variance)
 
         # permutation test on the binding cut point
         both = np.vstack([J, C])
@@ -206,7 +212,9 @@ def main():
         values[f"dominance_p_{kappa}"] = p_text
         values[f"contrast_{kappa}"] = f"{contrast:.3f}"
         values[f"interval_{kappa}"] = f"[{lo:.3f}, {hi:.3f}]"
-        values[f"effect_{kappa}"] = f"{effect:.2f} standard deviations"
+        qualifier = ("pooled within-repertoire standard deviations"
+                     if kappa == "major" else "such standard deviations")
+        values[f"effect_{kappa}"] = f"{effect:.2f} {qualifier}"
 
     export("the-brightness-contrast", values)
 

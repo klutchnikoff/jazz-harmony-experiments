@@ -128,6 +128,17 @@ def assert_floors(rows):
         "the octatonic row no longer has the largest support of the nine")
 
 
+def assert_diatonic_coverage(rows):
+    """Every interval is covered by at least one of the seven ordered rows.
+
+    Section 6.3 conditions a work's reading on those rows.  This coverage makes
+    the normalizing denominator positive for every nonzero kind.
+    """
+    diatonic = np.array([row for _, row in rows[:7]])
+    assert np.all(np.any(diatonic > 0, axis=0)), (
+        "an interval is absent from every diatonic mode")
+
+
 def main():
     order = [DIATONIC_MODE_NAMES.index(m) for m in BRIGHT]
     rows = [(m, np.asarray(W_DIATONIC, float)[j])
@@ -139,6 +150,7 @@ def main():
     assert_diatonic_construction(rows)
     assert_symmetric_collections(rows)
     assert_floors(rows)
+    assert_diatonic_coverage(rows)
 
     words = {7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven"}
     values = {

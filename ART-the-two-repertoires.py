@@ -19,12 +19,16 @@ Every figure the subsection states, and the claims it makes that carry no number
                     absolute difference across the nine, which controls the
                     family-wise rate under the joint null.
 
-  the size control  Here the level changes, and the subsection says so:
-                    D_{R,m}(n) is a share of duration and psi_{R,m}(n) a
-                    duration-weighted conditional mean over chords.  Every size
-                    observed in the common practice also occurs in jazz, so we
-                    give jazz the common-practice size distribution.  This
-                    requires no extrapolation to sizes absent from one corpus.
+  the size control  Here the level changes, and the subsection says so: chord
+                    size is the actual pitch-class cardinality 1 + |k|, not the
+                    size |k^q| of the tonic-relative input to Phi.  rho is a
+                    share of duration and nu a duration-weighted conditional
+                    mean over chords.  Both repertoires are standardized to the
+                    common-practice size distribution on their shared support.
+                    The only common-practice size outside that support is a
+                    negligible share of the minor-key duration.  Inference
+                    still permutes whole works, not chords, and recomputes the
+                    complete standardization after every reallocation.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-two-repertoires.py
 """
@@ -63,7 +67,20 @@ KEY_TYPES = {"major": 0, "minor": 1}
 
 
 def stream(kappa):
-    return np.random.default_rng([SEED, KEY_TYPES[kappa]])
+    return np.random.Generator(
+        np.random.PCG64([SEED, KEY_TYPES[kappa]])
+    )
+
+
+def size_stream(kappa):
+    """An independent stream for the chord-size permutation statistic.
+
+    Stream identifiers 1--3 are used by ART-the-brightness-contrast.py; 4 is
+    reserved here so that no two stochastic computations share a bit stream.
+    """
+    return np.random.Generator(
+        np.random.PCG64([SEED, 4, KEY_TYPES[kappa]])
+    )
 
 
 def english_list(names):
@@ -81,7 +98,7 @@ def degree_reading(root, kind, cache={}):
         content |= {0}
         intervals = [i - 1 for i in range(1, 12) if i in content]
         m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
-        cache[key] = (len(intervals), m / m.sum())
+        cache[key] = m / m.sum()
     return cache[key]
 
 
@@ -146,28 +163,80 @@ def weimar_check():
     return shared, disagree_all, kept, disagree_kept
 
 
+def size_statistics(jazz, common):
+    """Raw and size-standardized gaps from work-level chord summaries.
+
+    Each array has one row per work, one cell per chord size, and ten columns
+    per cell: duration followed by its nine duration-weighted modal sums.
+    Keeping works separate here is what lets the permutation test preserve the
+    dependence among chords from the same work.
+    """
+    cells = {"J": jazz.sum(axis=0), "C": common.sum(axis=0)}
+    duration = {c: cells[c][:, 0] for c in "JC"}
+    support = {
+        c: np.flatnonzero(duration[c] > 0).tolist()
+        for c in "JC"
+    }
+    shared = sorted(set(support["C"]) & set(support["J"]))
+    if not shared:
+        raise ValueError("the two groups have no shared chord size")
+
+    mean = {
+        c: cells[c][:, 1:].sum(axis=0) / duration[c].sum()
+        for c in "JC"
+    }
+    mean_size = {
+        c: np.arange(len(duration[c])) @ duration[c] / duration[c].sum()
+        for c in "JC"
+    }
+    excluded = (
+        duration["C"][list(set(support["C"]) - set(shared))].sum()
+        / duration["C"].sum()
+    )
+    target = duration["C"][shared]
+    target = target / target.sum()
+    adjusted = {
+        c: sum(
+            weight * cells[c][size, 1:] / duration[c][size]
+            for weight, size in zip(target, shared)
+        )
+        for c in "JC"
+    }
+    return {
+        "support": support,
+        "shared": shared,
+        "mean_size": mean_size,
+        "excluded": excluded,
+        "raw": np.abs(mean["C"] - mean["J"]).sum(),
+        "standardized": np.abs(adjusted["C"] - adjusted["J"]).sum(),
+    }
+
+
 def main():
     songs, _titles, ids, _styles, n_jazz = load_corpus()
     keep = key_exact(ids)
     mode = annotated_modes()
 
     works = collections.defaultdict(list)
-    chords = collections.defaultdict(lambda: [0.0, np.zeros(9)])
+    size_works = collections.defaultdict(list)
     for n, (song, k, song_id) in enumerate(zip(songs, keep, ids)):
         if not k:
             continue
         where = "J" if n < n_jazz else "C"
         m = mode.get(str(song_id), "major")
         total, weighted = 0.0, np.zeros(9)
+        by_size = np.zeros((13, 10))
         for (root, kind), duration in song:
-            size, reading = degree_reading(root, kind)
+            reading = degree_reading(root, kind)
+            size = 1 + sum(kind)
             weighted += duration * reading
             total += duration
-            cell = chords[(where, m, size)]
-            cell[0] += duration
-            cell[1] += duration * reading
+            by_size[size, 0] += duration
+            by_size[size, 1:] += duration * reading
         works[(where, m)].append(weighted / total)
+        size_works[(where, m)].append(by_size)
     W = {k: np.array(v) for k, v in works.items()}
+    H = {k: np.array(v) for k, v in size_works.items()}
 
     pooled = {c: np.vstack([W[(c, "major")], W[(c, "minor")]]) for c in "JC"}
     gaps = {"pooled": np.abs(pooled["C"].mean(0) - pooled["J"].mean(0)).sum()}
@@ -196,7 +265,12 @@ def main():
             / (PERMUTATIONS + 1)
             for j in range(9)
         ]
-        beyond[m] = int(sum(value < 0.05 for value in adjusted))
+        retained = {MODES[j] for j, value in enumerate(adjusted) if value < 0.05}
+        expected = set(SIDES[m]["cp"]) | set(SIDES[m]["jazz"])
+        assert retained == expected, (
+            f"the family-wise 5% coordinates among {m}-key works are now "
+            f"{sorted(retained)}, not {sorted(expected)}")
+        beyond[m] = len(retained)
         print(f"{m:8s} {len(A):6d} {len(B):5d} {gaps[m]:8.4f} {p:9.4g}"
               f"   {beyond[m]} of nine modes beyond the family-wise 5%")
         assert exceedances == 0, f"the {m} gap is now reached by a permutation"
@@ -209,33 +283,59 @@ def main():
                 f"the jazz no longer carries the more {name} mass among "
                 f"{m}-key works")
 
-    # the size control, at the level of chords and not of works
+    # The size control, at the level of chords and not of works.  Standardize
+    # both repertoires to the common-practice size distribution on the shared
+    # support.  This avoids both extrapolation and the asymmetry of comparing a
+    # standardized jazz mean with an unstandardized common-practice one.
     print()
     standardised = {}
+    excluded = {}
+    size_supports = {}
+    size_p = {}
     for m in ("major", "minor"):
-        support = {
-            c: [n for n in range(1, 12) if chords[(c, m, n)][0] > 0]
-            for c in "JC"
-        }
-        assert set(support["C"]) <= set(support["J"]), (
-            f"the common-practice {m} group now contains a chord size absent "
-            "from jazz, so the stated standardisation requires extrapolation")
-        mean = {c: sum(chords[(c, m, n)][1] for n in range(1, 12))
-                / sum(chords[(c, m, n)][0] for n in range(1, 12)) for c in "JC"}
-        share = np.array([chords[("C", m, n)][0] for n in support["C"]])
-        share = share / share.sum()
-        jazz_under_cp = sum(
-            w * chords[("J", m, n)][1] / chords[("J", m, n)][0]
-            for w, n in zip(share, support["C"])
-        )
-        raw = np.abs(mean["C"] - mean["J"]).sum()
-        std = np.abs(mean["C"] - jazz_under_cp).sum()
+        J, C = H[("J", m)], H[("C", m)]
+        observed = size_statistics(J, C)
+        size_supports[m] = observed["support"]
+        excluded[m] = observed["excluded"]
+        assert observed["mean_size"]["J"] > observed["mean_size"]["C"], (
+            f"jazz no longer has the larger duration-weighted mean chord size "
+            f"among {m}-key works")
+        raw = observed["raw"]
+        std = observed["standardized"]
         standardised[m] = (raw, std)
+
+        both = np.concatenate([J, C])
+        shuffle = size_stream(m)
+        null = np.empty(PERMUTATIONS)
+        for t in range(PERMUTATIONS):
+            order = shuffle.permutation(len(both))
+            null[t] = size_statistics(
+                both[order[:len(J)]],
+                both[order[len(J):]],
+            )["standardized"]
+        exceedances = int(np.count_nonzero(null >= std))
+        p = (1 + exceedances) / (PERMUTATIONS + 1)
+        size_p[m] = (
+            f"1/{PERMUTATIONS + 1}" if exceedances == 0 else f"{p:.4f}"
+        )
         print(f"   {m:8s} chord-level gap {raw:.6f}, "
-              f"with jazz under the common-practice size mix {std:.6f}")
+              f"standardized on sizes {observed['shared']} {std:.6f}, "
+              f"permutation p = {size_p[m]}; common-practice duration "
+              f"excluded {100 * excluded[m]:.4f}%")
         assert std > raw, (
             f"standardising no longer widens the {m} gap, so size no longer "
             "works against the difference as Section 6.2 says")
+
+    assert size_supports["major"] == {
+        "J": list(range(2, 9)), "C": list(range(2, 7))
+    }, "the major-key chord-size supports have changed"
+    assert size_supports["minor"] == {
+        "J": list(range(2, 8)), "C": list(range(1, 6))
+    }, "the minor-key chord-size supports have changed"
+    assert excluded["major"] == 0
+    assert round(100 * excluded["minor"], 3) == 0.017, (
+        "the excluded minor-key common-practice duration no longer rounds to "
+        "0.017%")
 
     shared, disagree_all, kept, disagree_kept = weimar_check()
     print(f"\nWeimar: {disagree_all} of {shared} annotated-major charts heard as "
@@ -260,6 +360,14 @@ def main():
         "size_std_major": f"{standardised['major'][1]:.3f}",
         "size_raw_minor": f"{standardised['minor'][0]:.3f}",
         "size_std_minor": f"{standardised['minor'][1]:.3f}",
+        "size_test":
+            f"both Monte Carlo p-values are 1/{PERMUTATIONS + 1}",
+        "size_support_major_cp": "sizes 2 to 6",
+        "size_support_major_jazz": "sizes 2 to 8",
+        "size_support_minor_cp": "sizes 1 to 5",
+        "size_support_minor_jazz": "sizes 2 to 7",
+        "size_excluded_minor":
+            f"accounts for only {100 * excluded['minor']:.3f}",
         "retained_major":
             f"{english_list(SIDES['major']['cp'])} in the common-practice "
             f"direction, and {english_list(SIDES['major']['jazz'])} in the "

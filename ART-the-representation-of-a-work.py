@@ -19,10 +19,10 @@ simplification costs.  Both are checked here.
                        all and the corpus mean shifts by 0.029 in l1, which is a
                        fifth of the gap Section 6.2 measures between repertoires.
 
-  the weighting        Duration against chord count.  Section 6 claims the
-                       choice is immaterial, and the correlation between the two
-                       mean representations is asserted rather than exported,
-                       0.999 being a number the manuscript rounds.
+  the weighting        Duration against chord count.  The l1 distance between
+                       the two mean representations is computed in each
+                       repertoire, matching the metric used everywhere else in
+                       Section 6, and exported for the manuscript.
 
 Reads the modulation figures from cache/common_practice_audit.csv, which is a
 different audit from cache/common_practice_key_audit.csv: that one asks whether
@@ -172,12 +172,13 @@ def main():
     for where in ("jazz", "cp"):
         a = np.array(by_duration[where]).mean(axis=0)
         b = np.array(by_count[where]).mean(axis=0)
-        r = np.corrcoef(a, b)[0, 1]
+        shift = np.abs(a - b).sum()
         print(f"   {where:4s} {len(by_duration[where]):5d} works, duration against "
-              f"count r = {r:.4f}")
-        assert round(r, 3) >= 0.999, (
-            f"the two weightings no longer agree to 0.999 in the {where} corpus, "
-            "which Section 6 says they do")
+              f"count l1 = {shift:.4f}")
+        assert shift < 0.05, (
+            f"duration and unit weighting now differ by {shift:.4f} in l1 in "
+            f"the {where} corpus, beyond the limited shift Section 6 reports")
+        values[f"weighting_{where}"] = f"{shift:.3f}"
 
     unmoved, shift = local_tonic_shift(read)
     print(f"\n   under locally annotated tonics: {unmoved:.1f}% of works "

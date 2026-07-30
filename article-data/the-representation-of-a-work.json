@@ -5,5 +5,7 @@
   "median_keys": "median of seven annotated key spans",
   "no_far": "54.7",
   "single_key": "13.5",
+  "weighting_cp": "0.012",
+  "weighting_jazz": "0.031",
   "works_unmoved": "52.6"
 }
