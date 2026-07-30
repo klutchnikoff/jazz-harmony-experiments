@@ -34,7 +34,7 @@ Observation first, inference second, as in Section 6.2.  Delta_{i,kappa} > 0 is 
 fact about this sample; the permutation test asks whether it belongs to the
 repertoires.  Rejecting says the ordered pattern is not an artefact of which
 works fell in which group -- it is not a simultaneous statement about the seven
-coordinates.
+coordinates.  Bonferroni correction covers the major- and minor-key tests.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-brightness-contrast.py
 """
@@ -51,6 +51,7 @@ from corpus import key_exact, load_corpus
 ORDER = 0.15
 PERMUTATIONS = 20_000
 BOOTSTRAP = 20_000
+KEY_TYPE_TESTS = 2
 DIATONIC = 7                      # the seven rows Section 3.2 orders
 RANKS = np.arange(1, DIATONIC + 1, dtype=float)
 
@@ -87,6 +88,8 @@ def degree_reading(root, kind, cache={}):
                    for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
         content |= {0}
         intervals = [i - 1 for i in range(1, 12) if i in content]
+        if not intervals:
+            raise ValueError("Phi_p(0) is undefined")
         m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
         cache[key] = m / m.sum()
     return cache[key]
@@ -193,8 +196,11 @@ def main():
             f"the {kappa}-key null median is no longer negative, so the "
             "statistic is no longer the demanding one Section 6.3 describes")
         exceedances = int(np.count_nonzero(null >= Delta[:DIATONIC - 1].min()))
-        p = (1 + exceedances) / (PERMUTATIONS + 1)
-        p_text = (f"1/{PERMUTATIONS + 1}" if exceedances == 0
+        p = min(
+            KEY_TYPE_TESTS * (1 + exceedances) / (PERMUTATIONS + 1),
+            1,
+        )
+        p_text = (f"{KEY_TYPE_TESTS}/{PERMUTATIONS + 1}" if exceedances == 0
                   else f"{p:.4f}")
 
         print(f"\n=== {kappa} keys ===  jazz {len(J)}, common practice {len(C)}")

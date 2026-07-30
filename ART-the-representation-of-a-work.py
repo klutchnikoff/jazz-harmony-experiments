@@ -56,6 +56,8 @@ def degree_reading(root, kind, cache={}):
                    for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
         content |= {0}
         intervals = [i - 1 for i in range(1, 12) if i in content]
+        if not intervals:
+            raise ValueError("Phi_p(0) is undefined")
         m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
         cache[key] = m / m.sum()
     return cache[key]

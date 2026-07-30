@@ -8,11 +8,12 @@ bar height compares them directly.
   left    major-key works, jazz against common practice
   right   minor-key works, the same
 
-The nine modes run along each axis in the order of Section 3.3, brightest first,
+The nine modes run along each axis in the order of Section 3.2, brightest first,
 so that the reversal the subsection reports is a leftward shift of the jazz bars
-in both panels.  A mode whose difference clears the family-wise 5 % of the
-permutation test carries a mark, and the modes that do not are faded: four of the
-nine are marked on the left, five on the right.
+in both panels.  A mode whose difference clears the overall family-wise 5 % of
+the max-T permutation tests and their Bonferroni correction carries a mark; the
+modes that do not are faded.  Four of the nine are marked on the left, five on
+the right.
 
 The representations come from ART-the-two-repertoires.py, loaded rather than
 recomputed, so that the figure cannot drift from the numbers the manuscript
@@ -57,12 +58,11 @@ def profiles(src):
             continue
         total, weighted = 0.0, np.zeros(9)
         for (root, kind), duration in song:
-            weighted += duration * src.degree_reading(root, kind)[1]
+            weighted += duration * src.degree_reading(root, kind)
             total += duration
         works[("J" if n < n_jazz else "C",
                mode.get(str(song_id), "major"))].append(weighted / total)
 
-    rng = np.random.default_rng(0)
     means, marked = {}, {}
     for m in ("major", "minor"):
         A = np.array(works[("J", m)])
@@ -71,13 +71,18 @@ def profiles(src):
         observed = B.mean(0) - A.mean(0)
         both = np.vstack([A, B])
         null = np.empty(PERMUTATIONS)
+        rng = src.stream(m)
         for t in range(PERMUTATIONS):
             order = rng.permutation(len(both))
             null[t] = np.abs(both[order[len(A):]].mean(0)
                              - both[order[:len(A)]].mean(0)).max()
         marked[m] = [
-            (1 + int(np.count_nonzero(null >= abs(observed[j]))))
-            / (PERMUTATIONS + 1) < 0.05
+            min(
+                src.KEY_TYPE_TESTS
+                * (1 + int(np.count_nonzero(null >= abs(observed[j]))))
+                / (PERMUTATIONS + 1),
+                1,
+            ) <= 0.05
             for j in range(9)
         ]
     return means, marked

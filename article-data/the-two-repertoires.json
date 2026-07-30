@@ -6,7 +6,7 @@
   "jazz_kept": "1921 of the 2829 jazz lead sheets",
   "minor_share_cp": "37",
   "minor_share_jazz": "6",
-  "permutation_floor": "1/20001",
+  "permutation_floor": "2/20001",
   "retained_major": "Lydian and Ionian in the common-practice direction, and Mixolydian and Dorian in the jazz direction",
   "retained_minor": "Lydian and Ionian in the common-practice direction, and Dorian, Aeolian, and Phrygian in the jazz direction",
   "size_excluded_minor": "accounts for only 0.017",
@@ -18,7 +18,7 @@
   "size_support_major_jazz": "sizes 2 to 8",
   "size_support_minor_cp": "sizes 1 to 5",
   "size_support_minor_jazz": "sizes 2 to 7",
-  "size_test": "both Monte Carlo p-values are 1/20001",
+  "size_test": "both Monte Carlo p-values are 2/20001",
   "weimar_after": "1 of 60",
   "weimar_before": "11 of 114"
 }

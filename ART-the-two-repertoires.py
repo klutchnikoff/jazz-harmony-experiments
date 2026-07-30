@@ -15,9 +15,11 @@ Every figure the subsection states, and the claims it makes that carry no number
   the permutation   Labels shuffled within a mode group, 20,000 times, the
                     statistic being the l1 distance between the two means.  The
                     Monte Carlo p-value includes the observed labelling and is
-                    therefore never zero.  The coordinate tests use the maximum
-                    absolute difference across the nine, which controls the
-                    family-wise rate under the joint null.
+                    therefore never zero.  Bonferroni correction covers the two
+                    key-type comparisons.  Within each, the coordinate tests
+                    use the maximum absolute difference across the nine; the
+                    two corrections together control the overall family-wise
+                    rate under the joint null.
 
   the size control  Here the level changes, and the subsection says so: chord
                     size is the actual pitch-class cardinality 1 + |k|, not the
@@ -47,6 +49,7 @@ from leadsheetanalyser.constants import NOTE_TO_PC
 
 ORDER = 0.15
 PERMUTATIONS = 20_000
+KEY_TYPE_TESTS = 2
 # Which modes lie on which side, group by group.  Not the same list twice: among
 # major-key works the Aeolian gap runs the other way and the Mixolydian one does
 # among minor-key works, both too small to survive the test, and an earlier draft
@@ -97,6 +100,8 @@ def degree_reading(root, kind, cache={}):
                    for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
         content |= {0}
         intervals = [i - 1 for i in range(1, 12) if i in content]
+        if not intervals:
+            raise ValueError("Phi_p(0) is undefined")
         m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
         cache[key] = m / m.sum()
     return cache[key]
@@ -259,20 +264,27 @@ def main():
             null_l1[t] = np.abs(d).sum()
             null_max[t] = np.abs(d).max()
         exceedances = int(np.count_nonzero(null_l1 >= gaps[m]))
-        p = (exceedances + 1) / (PERMUTATIONS + 1)
+        p = min(
+            KEY_TYPE_TESTS * (exceedances + 1) / (PERMUTATIONS + 1),
+            1,
+        )
         adjusted = [
-            (1 + int(np.count_nonzero(null_max >= abs(observed[j]))))
-            / (PERMUTATIONS + 1)
+            min(
+                KEY_TYPE_TESTS
+                * (1 + int(np.count_nonzero(null_max >= abs(observed[j]))))
+                / (PERMUTATIONS + 1),
+                1,
+            )
             for j in range(9)
         ]
-        retained = {MODES[j] for j, value in enumerate(adjusted) if value < 0.05}
+        retained = {MODES[j] for j, value in enumerate(adjusted) if value <= 0.05}
         expected = set(SIDES[m]["cp"]) | set(SIDES[m]["jazz"])
         assert retained == expected, (
             f"the family-wise 5% coordinates among {m}-key works are now "
             f"{sorted(retained)}, not {sorted(expected)}")
         beyond[m] = len(retained)
         print(f"{m:8s} {len(A):6d} {len(B):5d} {gaps[m]:8.4f} {p:9.4g}"
-              f"   {beyond[m]} of nine modes beyond the family-wise 5%")
+              f"   {beyond[m]} of nine modes beyond the overall family-wise 5%")
         assert exceedances == 0, f"the {m} gap is now reached by a permutation"
         for name in SIDES[m]["cp"]:
             assert observed[MODES.index(name)] > 0, (
@@ -314,9 +326,13 @@ def main():
                 both[order[len(J):]],
             )["standardized"]
         exceedances = int(np.count_nonzero(null >= std))
-        p = (1 + exceedances) / (PERMUTATIONS + 1)
+        p = min(
+            KEY_TYPE_TESTS * (1 + exceedances) / (PERMUTATIONS + 1),
+            1,
+        )
         size_p[m] = (
-            f"1/{PERMUTATIONS + 1}" if exceedances == 0 else f"{p:.4f}"
+            f"{KEY_TYPE_TESTS}/{PERMUTATIONS + 1}"
+            if exceedances == 0 else f"{p:.4f}"
         )
         print(f"   {m:8s} chord-level gap {raw:.6f}, "
               f"standardized on sizes {observed['shared']} {std:.6f}, "
@@ -361,7 +377,8 @@ def main():
         "size_raw_minor": f"{standardised['minor'][0]:.3f}",
         "size_std_minor": f"{standardised['minor'][1]:.3f}",
         "size_test":
-            f"both Monte Carlo p-values are 1/{PERMUTATIONS + 1}",
+            f"both Monte Carlo p-values are "
+            f"{KEY_TYPE_TESTS}/{PERMUTATIONS + 1}",
         "size_support_major_cp": "sizes 2 to 6",
         "size_support_major_jazz": "sizes 2 to 8",
         "size_support_minor_cp": "sizes 1 to 5",
@@ -376,7 +393,7 @@ def main():
             f"{english_list(SIDES['minor']['cp'])} in the common-practice "
             f"direction, and {english_list(SIDES['minor']['jazz'])} in the "
             "jazz direction",
-        "permutation_floor": f"1/{PERMUTATIONS + 1}",
+        "permutation_floor": f"{KEY_TYPE_TESTS}/{PERMUTATIONS + 1}",
     })
 
 

@@ -1,20 +1,22 @@
-"""Article data for Section 6.3, "What separates them".
+"""Article data for Section 6.5, "What separates them".
 
-The gap of Section 6.2 decomposes over degrees, exactly.  Writing D_A(d) for the
-share of a set's duration spent on the degree d,
+The unstandardized chord-level gap of Section 6.4 decomposes over chord types,
+exactly.  Writing rho_A(i,k) for the share of a set's duration spent on type
+(i,k),
 
-    sum_d D_A(d) Phi_p(d)
+    sum_(i,k) rho_A(i,k) Phi_p(i,k)
 
 is the duration-weighted mean reading of A, so the gap between two sets is
 
-    sum_d ( D_C(d) - D_J(d) ) Phi_p(d),
+    sum_(i,k) ( rho_C(i,k) - rho_J(i,k) ) Phi_p(i,k),
 
-and each degree contributes ( D_C(d) - D_J(d) ) [Phi_p(d)]_j to the gap on the
-mode j.  The contributions sum to the gap by construction, which the script
-checks rather than trusts.
+and each type contributes
+( rho_C(i,k) - rho_J(i,k) ) [Phi_p(i,k)]_j to the gap on mode j.  The
+contributions sum to the gap by construction, which the script checks rather
+than trusts.
 
-This is the chord level, as the size control of Section 6.2 is: D_A is a share of
-duration over pooled chords, not a mean over works.  The gap it decomposes is
+This is the chord level, as the size control of Section 6.4 is: rho_A is a share
+of duration over pooled chords, not a mean over works.  The gap it decomposes is
 therefore 0.102 among major-key works and not the 0.093 of the work-level
 comparison.
 
@@ -42,6 +44,8 @@ def degree_reading(root, kind, cache={}):
                    for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
         content |= {0}
         intervals = [i - 1 for i in range(1, 12) if i in content]
+        if not intervals:
+            raise ValueError("Phi_p(0) is undefined")
         m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
         cache[key] = m / m.sum()
     return cache[key]
