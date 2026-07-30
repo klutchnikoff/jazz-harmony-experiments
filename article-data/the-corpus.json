@@ -2,10 +2,7 @@
   "cp_kinds": 57,
   "cp_tokens": 99036,
   "cp_works": 434,
-  "density_ratio": "3.7",
   "jazz_kinds": 130,
   "jazz_songs": 2829,
-  "jazz_tokens": 172783,
-  "per_sheet": "61.1",
-  "per_work": "228.2"
+  "jazz_tokens": 172783
 }
