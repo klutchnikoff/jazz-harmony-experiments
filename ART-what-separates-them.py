@@ -119,29 +119,56 @@ def main():
     def kind_of(*intervals):
         return tuple(1 if i in intervals else 0 for i in range(1, 12))
 
+    # The four degrees Section 6.5 tabulates, named by their exact kind and not
+    # by the label, which ignores the sixth and would let V and V6 answer to one
+    # name.  They are the four largest contributions to the Ionian gap, and the
+    # script checks that they still are rather than trusting the list.
     wanted = {"VM": (7, kind_of(4, 7)),
-              "IIm7": (2, kind_of(3, 7, 10)),
-              "IMmaj7": (0, kind_of(4, 7, 11))}
+              "IMmaj7": (0, kind_of(4, 7, 11)),
+              "VM7": (7, kind_of(4, 7, 10)),
+              "IIm7": (2, kind_of(3, 7, 10))}
+    ionian, dorian = MODES.index("Ionian"), MODES.index("Dorian")
+
+    ionian_contribution = {d: delta[d] * reading[d][ionian] for d in names}
+    top_four = sorted(ionian_contribution,
+                      key=lambda d: -abs(ionian_contribution[d]))[:4]
+    assert set(top_four) == set(wanted.values()), (
+        "the four largest contributions to the Ionian gap are no longer the "
+        "four degrees Section 6.5 tabulates")
+
+    # One string per table row rather than four bare numbers.  A bare 0.52 or
+    # 6.3 is found elsewhere in the manuscript by accident -- Section 5.1 reads
+    # a dominant seventh at 0.52, Section 6.1 spends 6.3 per cent of a duration
+    # -- so the check would pass on a stale cell.  A whole row cannot collide,
+    # and its order is verified along with its values.  The cost is that this
+    # couples to the column order of the table in Section 6.5: reordering the
+    # columns will fail the check, which is what one wants it to do.
     for name, d in wanted.items():
         assert d in names, f"the degree {name} is no longer in the corpus"
         assert label(*d) == name, f"{name} is not what label() calls it"
-        values[f"jazz_{name}"] = f"{100 * share['J'][d]:.1f}"
-        values[f"cp_{name}"] = f"{100 * share['C'][d]:.1f}"
+        values[f"row_{name}"] = (
+            f"{100 * share['J'][d]:.1f} & {100 * share['C'][d]:.1f} & "
+            f"{reading[d][ionian]:.2f} & {ionian_contribution[d]:.3f}")
 
-    ionian, dorian = MODES.index("Ionian"), MODES.index("Dorian")
-    v, ii = wanted["VM"], wanted["IIm7"]
     values["gap_ionian"] = f"{gap[ionian]:.3f}"
-    values["VM_reads_ionian"] = f"{reading[v][ionian]:.2f}"
-    values["VM_contributes"] = f"{delta[v] * reading[v][ionian]:.3f}"
     values["gap_dorian"] = f"{gap[dorian]:.3f}"
-    values["IIm7_reads_dorian"] = f"{reading[ii][dorian]:.2f}"
-    values["IIm7_contributes"] = f"{delta[ii] * reading[ii][dorian]:.3f}"
-    # The article now reports only these two leading contributions in its
-    # conclusion.  The full decomposition remains printed above for exploration.
-    export("what-separates-them", {
-        "VM_contributes": values["VM_contributes"],
-        "IIm7_contributes": values["IIm7_contributes"],
-    })
+
+    # Section 6.5 says the net is a residue of larger opposing terms, so check
+    # that at least two contributions run each way and that the largest of them
+    # exceeds the net it belongs to.
+    signs = [np.sign(ionian_contribution[d]) for d in wanted.values()]
+    assert signs.count(1.0) >= 2 and signs.count(-1.0) >= 2, (
+        "the Ionian contributions no longer oppose one another")
+    assert max(abs(ionian_contribution[d]) for d in wanted.values()) > abs(gap[ionian]), (
+        "no single contribution now exceeds the net Ionian gap")
+
+    # The supertonic minor seventh reads Ionian and Dorian alike, as Section 5.2
+    # notes, so one contribution serves both sentences.
+    ii = wanted["IIm7"]
+    assert abs(reading[ii][ionian] - reading[ii][dorian]) < 5e-3, (
+        "the supertonic minor seventh no longer reads Ionian and Dorian alike")
+
+    export("what-separates-them", values)
 
 
 if __name__ == "__main__":
