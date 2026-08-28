@@ -14,12 +14,12 @@ import numpy as np
 import jams
 import pandas as pd
 
-from article_setup import DATA_ROOT, cache_directory
+from article_setup import CACHE_ROOT, DATA_ROOT, require_data
 from leadsheetanalyser.chords import map_chord
 from leadsheetanalyser.constants import NOTE_TO_PC
 
 DATA = DATA_ROOT
-CACHE_DIR = cache_directory()
+CACHE_DIR = CACHE_ROOT
 
 BORROWED_DEGREES = {3, 8, 10}  # bIII, bVI, bVII relative to the tonic
 MIN_CHORDS = 3
@@ -87,6 +87,7 @@ def _annotation(j, namespace):
 
 def load_real_book():
     """Real Book songs with durations, collection-normalised."""
+    require_data("music_realbook.pkl")
     df = pd.read_pickle(DATA / "music_realbook.pkl")
     if "duration_progression" not in df.columns:
         raise RuntimeError(
@@ -118,6 +119,7 @@ def load_real_book():
 
 def load_common_practice():
     """When-in-Rome songs with durations, transposed to their annotated tonic."""
+    require_data("meta.csv", "jams_files")
     meta = pd.read_csv(DATA / "meta.csv")
     wir = meta[meta["id"].astype(str).str.startswith("when-in-rome")]
     songs, titles, styles, ids = [], [], [], []
@@ -333,5 +335,4 @@ def descriptive_statistics(songs, weighting="duration"):
         mean_size.append(float(np.sum(w * np.array([sum(k) + 1.0 for k in kinds]))))
     return (np.array(n_distinct), np.array(seventh),
             np.array(borrowed), np.array(mean_size))
-
 

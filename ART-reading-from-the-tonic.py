@@ -25,8 +25,11 @@ import itertools
 
 import numpy as np
 
+from article_analysis import interval_kind
 from article_data import export
 from chord_scale import SYSTEM, MODES
+from leadsheetanalyser.chord_dissimilarities import modal_profile
+from leadsheetanalyser.chords import tonic_relative_kind
 
 ORDER = 0.15
 NOTES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"]
@@ -43,14 +46,14 @@ def content(root, kind):
 
 def degree(root, kind, tonic):
     """The kind rooted on the tonic whose content is C(r,k) together with q."""
-    whole = content(root, kind) | {tonic}
-    return tuple(1 if (tonic + i) % 12 in whole else 0 for i in range(1, 12))
+    return tuple(tonic_relative_kind(root, interval_kind(kind), tonic))
 
 
 def reading(deg, p=ORDER):
-    intervals = [i for i in range(11) if deg[i]]
-    m = np.mean(SYSTEM[:, intervals] ** p, axis=1) ** (1 / p)
-    return m / m.sum()
+    profile = modal_profile(np.asarray(deg, dtype=int), SYSTEM, p)
+    if profile is None:
+        raise ValueError("Phi_p(0) is undefined")
+    return profile
 
 
 def main():

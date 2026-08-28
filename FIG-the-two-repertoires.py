@@ -15,20 +15,27 @@ the max-T permutation tests and their Bonferroni correction carries a mark; the
 modes that do not are faded.  Four of the nine are marked on the left, five on
 the right.
 
-The representations come from ART-the-two-repertoires.py, loaded rather than
-recomputed, so that the figure cannot drift from the numbers the manuscript
-states and the assertions guard.
+The representations and max-T marks use the same tested functions as
+ART-the-two-repertoires.py, so the figure cannot maintain a parallel
+implementation of the analysis.
 
 Run:  LSA_LOCAL=1 .venv/bin/python FIG-the-two-repertoires.py
 """
-import collections
-import importlib.util
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from chord_scale import MODES
+from article_analysis import (
+    TonicModalReader,
+    grouped_work_profiles,
+    load_annotated_modes,
+    profile_permutation_test,
+    profile_stream,
+)
+from article_setup import cache_directory
+from chord_scale import MODES, SYSTEM
+from corpus import key_exact, load_corpus
 from figure_style import save_article_figure
 
 HERE = Path(__file__).resolve().parent
@@ -36,60 +43,36 @@ OUT = HERE.parents[0] / "TeX" / "fig"
 JAZZ, CP = "#1f4e79", "#a3c4dc"
 FADED = 0.38          # modes whose difference does not clear the test
 PERMUTATIONS = 20_000
+KEY_TYPE_TESTS = 2
+ORDER = 0.15
+READER = TonicModalReader(SYSTEM, ORDER)
 
 
-def _source():
-    """The producer of Section 6.2, imported by path for its hyphenated name."""
-    spec = importlib.util.spec_from_file_location(
-        "two_repertoires", HERE / "ART-the-two-repertoires.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def profiles(src):
+def profiles():
     """Mean representation of each of the four groups, and which modes differ."""
-    songs, _titles, ids, _styles, n_jazz = src.load_corpus()
-    keep = src.key_exact(ids)
-    mode = src.annotated_modes()
-    works = collections.defaultdict(list)
-    for n, (song, k, song_id) in enumerate(zip(songs, keep, ids)):
-        if not k:
-            continue
-        total, weighted = 0.0, np.zeros(9)
-        for (root, kind), duration in song:
-            weighted += duration * src.degree_reading(root, kind)
-            total += duration
-        works[("J" if n < n_jazz else "C",
-               mode.get(str(song_id), "major"))].append(weighted / total)
+    songs, _titles, ids, _styles, n_jazz = load_corpus()
+    keep = key_exact(ids)
+    modes = load_annotated_modes(cache_directory())
+    works = grouped_work_profiles(songs, ids, keep, n_jazz, modes, READER)
 
     means, marked = {}, {}
     for m in ("major", "minor"):
-        A = np.array(works[("J", m)])
-        B = np.array(works[("C", m)])
+        A = works[("J", m)]
+        B = works[("C", m)]
         means[m] = (A.mean(0), B.mean(0), len(A), len(B))
-        observed = B.mean(0) - A.mean(0)
-        both = np.vstack([A, B])
-        null = np.empty(PERMUTATIONS)
-        rng = src.stream(m)
-        for t in range(PERMUTATIONS):
-            order = rng.permutation(len(both))
-            null[t] = np.abs(both[order[len(A):]].mean(0)
-                             - both[order[:len(A)]].mean(0)).max()
-        marked[m] = [
-            min(
-                src.KEY_TYPE_TESTS
-                * (1 + int(np.count_nonzero(null >= abs(observed[j]))))
-                / (PERMUTATIONS + 1),
-                1,
-            ) <= 0.05
-            for j in range(9)
-        ]
+        test = profile_permutation_test(
+            A,
+            B,
+            PERMUTATIONS,
+            profile_stream(m),
+            KEY_TYPE_TESTS,
+        )
+        marked[m] = list(test.adjusted_coordinate_p <= 0.05)
     return means, marked
 
 
 def main():
-    means, marked = profiles(_source())
+    means, marked = profiles()
 
     fig, axes = plt.subplots(1, 2, figsize=(6.2, 2.5), sharey=True)
     x = np.arange(9)

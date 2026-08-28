@@ -41,6 +41,12 @@ import jams
 import numpy as np
 import pandas as pd
 
+from article_analysis import (
+    TonicModalReader,
+    load_annotated_modes,
+    profile_permutation_test,
+    profile_stream,
+)
 from article_data import export
 from article_setup import cache_directory
 from chord_scale import SYSTEM, MODES
@@ -48,6 +54,7 @@ from corpus import DATA, _annotation, key_exact, load_corpus
 from leadsheetanalyser.constants import NOTE_TO_PC
 
 ORDER = 0.15
+READER = TonicModalReader(SYSTEM, ORDER)
 PERMUTATIONS = 20_000
 KEY_TYPE_TESTS = 2
 # Which modes lie on which side, group by group.  Not the same list twice: among
@@ -69,12 +76,6 @@ SEED = 20260729
 KEY_TYPES = {"major": 0, "minor": 1}
 
 
-def stream(kappa):
-    return np.random.Generator(
-        np.random.PCG64([SEED, KEY_TYPES[kappa]])
-    )
-
-
 def size_stream(kappa):
     """An independent stream for the chord-size permutation statistic.
 
@@ -91,30 +92,6 @@ def english_list(names):
     if len(names) == 2:
         return f"{names[0]} and {names[1]}"
     return f"{', '.join(names[:-1])}, and {names[-1]}"
-
-
-def degree_reading(root, kind, cache={}):
-    key = (root, kind)
-    if key not in cache:
-        content = {(root + i) % 12
-                   for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
-        content |= {0}
-        intervals = [i - 1 for i in range(1, 12) if i in content]
-        if not intervals:
-            raise ValueError("Phi_p(0) is undefined")
-        m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
-        cache[key] = m / m.sum()
-    return cache[key]
-
-
-def annotated_modes():
-    out = {}
-    for name in ("key_audit.csv", "common_practice_key_audit.csv"):
-        table = pd.read_csv(cache_directory() / name)
-        for song_id, annotated in zip(table["id"], table["annotated"]):
-            minor = isinstance(annotated, str) and "min" in annotated.lower()
-            out[str(song_id)] = "minor" if minor else "major"
-    return out
 
 
 def weimar_check():
@@ -220,7 +197,7 @@ def size_statistics(jazz, common):
 def main():
     songs, _titles, ids, _styles, n_jazz = load_corpus()
     keep = key_exact(ids)
-    mode = annotated_modes()
+    mode = load_annotated_modes(cache_directory())
 
     works = collections.defaultdict(list)
     size_works = collections.defaultdict(list)
@@ -232,7 +209,7 @@ def main():
         total, weighted = 0.0, np.zeros(9)
         by_size = np.zeros((13, 10))
         for (root, kind), duration in song:
-            reading = degree_reading(root, kind)
+            reading = READER(root, kind)
             size = 1 + sum(kind)
             weighted += duration * reading
             total += duration
@@ -251,32 +228,18 @@ def main():
 
     beyond = {}
     for m in ("major", "minor"):
-        shuffle = stream(m)
         A, B = W[("J", m)], W[("C", m)]
-        observed = B.mean(0) - A.mean(0)
-        gaps[m] = np.abs(observed).sum()
-        both = np.vstack([A, B])
-        null_l1 = np.empty(PERMUTATIONS)
-        null_max = np.empty(PERMUTATIONS)
-        for t in range(PERMUTATIONS):
-            order = shuffle.permutation(len(both))
-            d = both[order[len(A):]].mean(0) - both[order[:len(A)]].mean(0)
-            null_l1[t] = np.abs(d).sum()
-            null_max[t] = np.abs(d).max()
-        exceedances = int(np.count_nonzero(null_l1 >= gaps[m]))
-        p = min(
-            KEY_TYPE_TESTS * (exceedances + 1) / (PERMUTATIONS + 1),
-            1,
+        test = profile_permutation_test(
+            A,
+            B,
+            PERMUTATIONS,
+            profile_stream(m),
+            KEY_TYPE_TESTS,
         )
-        adjusted = [
-            min(
-                KEY_TYPE_TESTS
-                * (1 + int(np.count_nonzero(null_max >= abs(observed[j]))))
-                / (PERMUTATIONS + 1),
-                1,
-            )
-            for j in range(9)
-        ]
+        observed = test.observed
+        gaps[m] = test.l1_gap
+        p = test.adjusted_l1_p
+        adjusted = test.adjusted_coordinate_p
         retained = {MODES[j] for j, value in enumerate(adjusted) if value <= 0.05}
         expected = set(SIDES[m]["cp"]) | set(SIDES[m]["jazz"])
         assert retained == expected, (
@@ -285,7 +248,8 @@ def main():
         beyond[m] = len(retained)
         print(f"{m:8s} {len(A):6d} {len(B):5d} {gaps[m]:8.4f} {p:9.4g}"
               f"   {beyond[m]} of nine modes beyond the overall family-wise 5%")
-        assert exceedances == 0, f"the {m} gap is now reached by a permutation"
+        assert test.l1_exceedances == 0, (
+            f"the {m} gap is now reached by a permutation")
         for name in SIDES[m]["cp"]:
             assert observed[MODES.index(name)] > 0, (
                 f"the common practice no longer carries the more {name} mass "

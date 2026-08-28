@@ -29,6 +29,7 @@ from matplotlib.patches import Rectangle
 
 from chord_scale import SYSTEM, MODES, PAIRING
 from figure_style import HEATMAP_CMAP, save_article_figure
+from leadsheetanalyser.chord_dissimilarities import modal_profile
 from vocabulary import build, corpus_counts, family, name, FAMILIES
 
 ORDER = 0.15
@@ -45,12 +46,7 @@ BOTTOM = 0.60
 
 
 def readings(vocab, p):
-    rows = []
-    for k in vocab:
-        intervals = [i for i in range(11) if k[i]]
-        m = np.mean(SYSTEM[:, intervals] ** p, axis=1) ** (1 / p)
-        rows.append(m / m.sum())
-    return np.array(rows)
+    return modal_profile(np.asarray(vocab, dtype=int), SYSTEM, p)
 
 
 def separation(P):

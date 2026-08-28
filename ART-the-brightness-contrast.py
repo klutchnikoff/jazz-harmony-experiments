@@ -38,17 +38,20 @@ coordinates.  Bonferroni correction covers the major- and minor-key tests.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-the-brightness-contrast.py
 """
-import collections
-
 import numpy as np
-import pandas as pd
 
+from article_analysis import (
+    TonicModalReader,
+    grouped_work_profiles,
+    load_annotated_modes,
+)
 from article_data import export
 from article_setup import cache_directory
 from chord_scale import MODES, SYSTEM
 from corpus import key_exact, load_corpus
 
 ORDER = 0.15
+READER = TonicModalReader(SYSTEM, ORDER)
 PERMUTATIONS = 20_000
 BOOTSTRAP = 20_000
 KEY_TYPE_TESTS = 2
@@ -71,30 +74,6 @@ def stream(purpose, kappa):
     )
 
 
-def annotated_modes():
-    out = {}
-    for name in ("key_audit.csv", "common_practice_key_audit.csv"):
-        table = pd.read_csv(cache_directory() / name)
-        for song_id, annotated in zip(table["id"], table["annotated"]):
-            minor = isinstance(annotated, str) and "min" in annotated.lower()
-            out[str(song_id)] = "minor" if minor else "major"
-    return out
-
-
-def degree_reading(root, kind, cache={}):
-    key = (root, kind)
-    if key not in cache:
-        content = {(root + i) % 12
-                   for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
-        content |= {0}
-        intervals = [i - 1 for i in range(1, 12) if i in content]
-        if not intervals:
-            raise ValueError("Phi_p(0) is undefined")
-        m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
-        cache[key] = m / m.sum()
-    return cache[key]
-
-
 def profiles():
     """Per work, its reading renormalised over the seven diatonic modes.
 
@@ -104,20 +83,13 @@ def profiles():
     """
     songs, _titles, ids, _styles, n_jazz = load_corpus()
     keep = key_exact(ids)
-    mode = annotated_modes()
-    works = collections.defaultdict(list)
-    for n, (song, kept, song_id) in enumerate(zip(songs, keep, ids)):
-        if not kept:
-            continue
-        total, weighted = 0.0, np.zeros(len(MODES))
-        for (root, kind), duration in song:
-            weighted += duration * degree_reading(root, kind)
-            total += duration
-        diatonic = (weighted / total)[:DIATONIC]
-        works[("J" if n < n_jazz else "C",
-               mode.get(str(song_id), "major"))].append(diatonic
-                                                        / diatonic.sum())
-    return {k: np.array(v) for k, v in works.items()}
+    modes = load_annotated_modes(cache_directory())
+    works = grouped_work_profiles(songs, ids, keep, n_jazz, modes, READER)
+    return {
+        key: profiles[:, :DIATONIC]
+        / profiles[:, :DIATONIC].sum(axis=1, keepdims=True)
+        for key, profiles in works.items()
+    }
 
 
 def cuts(jazz, common):

@@ -5,7 +5,10 @@ and looks for each one in TeX/main.tex, digit grouping removed.  A value that
 cannot be found is a number the pipeline computes and the text does not state --
 almost always a figure recomputed after a change of rule and never carried over.
 
-Run:  LSA_LOCAL=1 .venv/bin/python check_article_numbers.py
+Run:  python check_article_numbers.py
+
+This check deliberately has no scientific-package dependencies: it compares
+already-versioned JSON exports with the manuscript and does not recompute them.
 """
 import sys
 

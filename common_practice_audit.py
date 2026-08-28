@@ -26,29 +26,13 @@ dominant is being read, for half its length, against a tonic it has left.
 Run:  python common_practice_audit.py
 """
 import jams
-import numpy as np
 import pandas as pd
-from music21 import chord as m21chord
-from music21 import stream
 
 from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
 from corpus import (
     DATA, era, map_chord, collection_tonic, _annotation, SUBDOMINANT_PULL,
 )
-
-def estimate_key(prog):
-    """The estimator of key_audit.py, inlined: that module is a script."""
-    s = stream.Stream()
-    for c in prog:
-        if c is None or c[0] is None or any(x is None for x in c[1:12]):
-            continue
-        root = int(c[0])
-        pcs = sorted({root % 12} | {(root + i) % 12 for i in range(1, 12) if c[i]})
-        s.append(m21chord.Chord(pcs))
-    if len(s) < 3:
-        return None
-    k = s.analyze("key")
-    return k.tonic.pitchClass, k.mode, float(k.correlationCoefficient)
+from leadsheetanalyser.key_estimation import estimate_key_from_chords
 
 
 OUT = cache_directory() / "common_practice_audit.csv"
@@ -106,7 +90,7 @@ def build_audit():
                 progression.append(map_chord(obs.value))
             except Exception:
                 progression.append(None)
-        est = estimate_key([c for c in progression if c is not None])
+        est = estimate_key_from_chords(progression)
         if est is None:
             continue
         est_col = (est[0] + 3) % 12 if est[1] == "minor" else est[0]

@@ -23,12 +23,12 @@ being covered by the assertion rather than by a number in the text.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-borrowed-degrees.py
 """
-import numpy as np
-
+from article_analysis import TonicModalReader
 from article_data import export
 from chord_scale import SYSTEM, MODES
 
 ORDER = 0.15
+READER = TonicModalReader(SYSTEM, ORDER)
 MAJ7, MI7, DOM, HALF = (4, 7, 11), (3, 7, 10), (4, 7, 10), (3, 6, 10)
 
 # (name, semitones above the tonic, kind, the mode harmony predicts)
@@ -70,10 +70,7 @@ ALTERED_MAXIMA = {
 
 
 def reading(offset, kind):
-    content = {(offset + i) % 12 for i in (0,) + tuple(kind)} | {0}
-    intervals = [i - 1 for i in range(1, 12) if i in content]
-    m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
-    return m / m.sum()
+    return READER.from_intervals(offset, kind)
 
 
 def main():

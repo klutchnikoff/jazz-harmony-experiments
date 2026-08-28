@@ -27,14 +27,12 @@ which for our purposes is agreement.
 
 Run:  python key_audit.py
 """
-import numpy as np
 import pandas as pd
-from music21 import chord as m21chord
-from music21 import stream
 
 from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
 from corpus import classify
 from leadsheetanalyser.constants import NOTE_TO_PC
+from leadsheetanalyser.key_estimation import estimate_key_from_chords
 
 OUT = cache_directory() / "key_audit.csv"
 OUT.parent.mkdir(exist_ok=True)
@@ -51,22 +49,6 @@ def parse_annotation(key_field):
     return pc, mode
 
 
-def estimate_key(prog):
-    s = stream.Stream()
-    for c in prog:
-        if c is None or c[0] is None or any(x is None for x in c[1:12]):
-            continue
-        root = int(c[0])
-        pcs = sorted({root % 12} | {(root + i) % 12 for i in range(1, 12) if c[i]})
-        s.append(m21chord.Chord(pcs))
-    if len(s) < 3:
-        return None
-    k = s.analyze("key")
-    return k.tonic.pitchClass, k.mode, float(k.correlationCoefficient)
-
-
-
-
 SOURCE = DATA_ROOT / "music_realbook.pkl"
 
 if cache_is_fresh(OUT, SOURCE, __file__):
@@ -80,7 +62,7 @@ else:
         if n % 200 == 0:
             print(f"  song {n}/{len(df)}", flush=True)
         annot = parse_annotation(row["key"])
-        est = estimate_key(row["chord_progression"])
+        est = estimate_key_from_chords(row["chord_progression"])
         if est is None:
             continue
         category = "no-annot" if annot is None else classify(annot, est)

@@ -25,10 +25,12 @@ import numpy as np
 from matplotlib.colors import PowerNorm
 from matplotlib.patches import Rectangle
 
+from article_analysis import TonicModalReader
 from chord_scale import SYSTEM, MODES
 from figure_style import HEATMAP_CMAP, save_article_figure
 
 ORDER = 0.15
+READER = TonicModalReader(SYSTEM, ORDER)
 OUT = Path(__file__).resolve().parents[1] / "TeX" / "fig"
 SOLE, TIED = "#c0392b", "#e08214"
 
@@ -70,10 +72,7 @@ CELL, LEFT, BOTTOM, TOP, GAP = 0.205, 1.02, 0.78, 0.30, 0.40
 
 def reading(offset, kind):
     """The degree at `offset` above the tonic, read as a distribution."""
-    content = {(offset + i) % 12 for i in (0,) + tuple(kind)} | {0}
-    intervals = [i - 1 for i in range(1, 12) if i in content]
-    m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
-    return m / m.sum()
+    return READER.from_intervals(offset, kind)
 
 
 def panel(ax, degrees, norm, rows=True):

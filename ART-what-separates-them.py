@@ -25,30 +25,17 @@ Run:  LSA_LOCAL=1 .venv/bin/python ART-what-separates-them.py
 import collections
 
 import numpy as np
-import pandas as pd
 
+from article_analysis import TonicModalReader, load_annotated_modes
 from article_data import export
 from article_setup import cache_directory
 from chord_scale import SYSTEM, MODES
 from corpus import key_exact, load_corpus
 
 ORDER = 0.15
+READER = TonicModalReader(SYSTEM, ORDER)
 ROMAN = ["I", "bII", "II", "bIII", "III", "IV", "bV", "V", "bVI", "VI", "bVII",
          "VII"]
-
-
-def degree_reading(root, kind, cache={}):
-    key = (root, kind)
-    if key not in cache:
-        content = {(root + i) % 12
-                   for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
-        content |= {0}
-        intervals = [i - 1 for i in range(1, 12) if i in content]
-        if not intervals:
-            raise ValueError("Phi_p(0) is undefined")
-        m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
-        cache[key] = m / m.sum()
-    return cache[key]
 
 
 def label(root, kind):
@@ -60,20 +47,10 @@ def label(root, kind):
     return f"{ROMAN[root % 12]}{third}{fifth}{seventh}"
 
 
-def annotated_modes():
-    out = {}
-    for name in ("key_audit.csv", "common_practice_key_audit.csv"):
-        table = pd.read_csv(cache_directory() / name)
-        for song_id, annotated in zip(table["id"], table["annotated"]):
-            minor = isinstance(annotated, str) and "min" in annotated.lower()
-            out[str(song_id)] = "minor" if minor else "major"
-    return out
-
-
 def main():
     songs, _titles, ids, _styles, n_jazz = load_corpus()
     keep = key_exact(ids)
-    mode = annotated_modes()
+    mode = load_annotated_modes(cache_directory())
 
     share = {"J": collections.defaultdict(float), "C": collections.defaultdict(float)}
     total = {"J": 0.0, "C": 0.0}
@@ -87,7 +64,7 @@ def main():
             # both reading as "IM", and they do not have one reading
             share[where][(root % 12, kind)] += duration
             total[where] += duration
-            reading.setdefault((root % 12, kind), degree_reading(root, kind))
+            reading.setdefault((root % 12, kind), READER(root, kind))
     for where in "JC":
         for name in share[where]:
             share[where][name] /= total[where]

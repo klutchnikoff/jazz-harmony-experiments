@@ -14,10 +14,9 @@ Values land in article-data/<name>.json, versioned with the scripts.
 import json
 from pathlib import Path
 
-from article_setup import ARTICLE_ROOT
-
 # Versioned with the scripts, not with the results: a diff on this directory is
 # the history of every number the article states.
+ARTICLE_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = Path(__file__).resolve().parent / "article-data"
 MANUSCRIPT = ARTICLE_ROOT / "TeX" / "main.tex"
 

@@ -28,18 +28,14 @@ from scipy.spatial.distance import pdist
 
 from article_data import export
 from chord_scale import MODES, PAIRING, SYSTEM
+from leadsheetanalyser.chord_dissimilarities import modal_profile
 from vocabulary import build, name
 
 ORDER = 0.15
 
 
 def profiles(vocab, p):
-    rows = []
-    for k in vocab:
-        intervals = [i for i in range(11) if k[i]]
-        m = np.mean(SYSTEM[:, intervals] ** p, axis=1) ** (1 / p)
-        rows.append(m / m.sum())
-    return np.array(rows)
+    return modal_profile(np.asarray(vocab, dtype=int), SYSTEM, p)
 
 
 def measure(vocab, p):

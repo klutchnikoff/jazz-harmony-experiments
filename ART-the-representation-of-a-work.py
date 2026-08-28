@@ -36,6 +36,7 @@ import jams
 import numpy as np
 import pandas as pd
 
+from article_analysis import TonicModalReader, work_profile
 from article_data import export
 from article_setup import cache_directory
 from chord_scale import SYSTEM
@@ -46,30 +47,8 @@ from leadsheetanalyser.constants import NOTE_TO_PC
 warnings.filterwarnings("ignore")
 
 ORDER = 0.15
+READER = TonicModalReader(SYSTEM, ORDER)
 MODULATION = cache_directory() / "common_practice_audit.csv"
-
-
-def degree_reading(root, kind, cache={}):
-    key = (root, kind)
-    if key not in cache:
-        content = {(root + i) % 12
-                   for i in (0,) + tuple(j + 1 for j in range(11) if kind[j])}
-        content |= {0}
-        intervals = [i - 1 for i in range(1, 12) if i in content]
-        if not intervals:
-            raise ValueError("Phi_p(0) is undefined")
-        m = np.mean(SYSTEM[:, intervals] ** ORDER, axis=1) ** (1 / ORDER)
-        cache[key] = m / m.sum()
-    return cache[key]
-
-
-def represent(song, by_duration=True):
-    total, weighted = 0.0, np.zeros(9)
-    for (root, kind), duration in song:
-        w = duration if by_duration else 1.0
-        weighted += w * degree_reading(root, kind)
-        total += w
-    return weighted / total
 
 
 def local_tonic_shift(read):
@@ -118,8 +97,8 @@ def local_tonic_shift(read):
             root = int(c[0]) % 12
             kind = tuple(1 if int(x) else 0 for x in c[1:12])
             here = next((t for s, e, t in spans if s <= o.time < e), q0)
-            a += d * degree_reading((root - q0) % 12, kind)
-            b += d * degree_reading((root - here) % 12, kind)
+            a += d * READER((root - q0) % 12, kind)
+            b += d * READER((root - here) % 12, kind)
             w += d
         if w > 0:
             opening.append(a / w)
@@ -167,8 +146,8 @@ def main():
         if not k:
             continue
         where = "jazz" if n < n_jazz else "cp"
-        by_duration[where].append(represent(song, True))
-        by_count[where].append(represent(song, False))
+        by_duration[where].append(work_profile(song, READER, True))
+        by_count[where].append(work_profile(song, READER, False))
 
     print()
     for where in ("jazz", "cp"):

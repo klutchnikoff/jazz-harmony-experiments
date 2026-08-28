@@ -24,13 +24,12 @@ import warnings
 
 import jams
 import pandas as pd
-from music21 import chord as m21chord
-from music21 import stream
 
 from article_setup import cache_directory, cache_is_fresh
 from corpus import DATA, _annotation, classify, era
 from leadsheetanalyser.chords import map_chord
 from leadsheetanalyser.constants import NOTE_TO_PC
+from leadsheetanalyser.key_estimation import estimate_key_from_chords
 
 warnings.filterwarnings("ignore")
 
@@ -47,26 +46,6 @@ def parse_annotation(label):
     if pc is None:
         return None
     return pc, ("minor" if mode.startswith("min") else "major")
-
-
-def estimate_key(annotation):
-    """Krumhansl-Schmuckler over the chords, as key_audit.py does for the jazz."""
-    s = stream.Stream()
-    for obs in annotation.data:
-        try:
-            c = map_chord(obs.value)
-        except Exception:
-            continue
-        if c is None or c[0] is None or any(x is None for x in c[1:12]):
-            continue
-        root = int(c[0])
-        s.append(m21chord.Chord(sorted({root % 12}
-                                       | {(root + i) % 12
-                                          for i in range(1, 12) if c[i]})))
-    if len(s) < 3:
-        return None
-    k = s.analyze("key")
-    return k.tonic.pitchClass, k.mode, float(k.correlationCoefficient)
 
 
 def build():
@@ -87,7 +66,13 @@ def build():
         if chords is None or keys is None or not len(keys.data):
             continue
         annot = parse_annotation(keys.data[0].value)
-        est = estimate_key(chords)
+        progression = []
+        for observation in chords.data:
+            try:
+                progression.append(map_chord(observation.value))
+            except Exception:
+                progression.append(None)
+        est = estimate_key_from_chords(progression)
         if est is None:
             continue
         rows.append({
