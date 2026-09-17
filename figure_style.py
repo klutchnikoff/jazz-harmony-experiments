@@ -133,6 +133,16 @@ def save_article_figure(fig, output_directory, stem):
     fig.savefig(
         output_directory / f"{stem}.png",
         dpi=FIGURE_DPI,
+        metadata={"Software": "Matplotlib"},
         **options,
     )
-    fig.savefig(output_directory / f"{stem}.pdf", **options)
+    fig.savefig(
+        output_directory / f"{stem}.pdf",
+        metadata={
+            "Creator": "Matplotlib",
+            "Producer": "Matplotlib",
+            "CreationDate": None,
+            "ModDate": None,
+        },
+        **options,
+    )

@@ -169,9 +169,10 @@ def main():
     print(f"Phi_1 separates all {len(seen)} nonzero kinds")
 
     export("what-the-reading-separates", {
-        "kernel_u": ",".join(map(str, U)),
-        "kernel_v": ",".join(map(str, V)),
+        "kernel_u": U,
+        "kernel_v": V,
         # the coordinate lists produced by the two cases at p = 1
+        # These are mathematical coordinate expressions, not prose lists.
         "case_b": ",".join(f"{c}b" for c in case_b).replace("1b", "b"),
         "case_a": ",".join(f"{c}a" for c in case_a).replace("1a", "a"),
     })

@@ -20,7 +20,6 @@ writing them above C.
 Run:  LSA_LOCAL=1 .venv/bin/python FIG-the-order-used-below.py
 """
 import itertools
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,6 +27,7 @@ from matplotlib.colors import PowerNorm
 from matplotlib.patches import Rectangle
 
 from chord_scale import SYSTEM, MODES, PAIRING
+from article_setup import figure_directory
 from figure_style import HEATMAP_CMAP, save_article_figure
 from leadsheetanalyser.chord_dissimilarities import modal_profile
 from vocabulary import build, corpus_counts, family, name, FAMILIES
@@ -35,7 +35,7 @@ from vocabulary import build, corpus_counts, family, name, FAMILIES
 ORDER = 0.15
 SOLE = "#c0392b"    # a maximum attained once
 TIED = "#e08214"    # attained more than once
-OUT = Path(__file__).resolve().parents[1] / "TeX" / "fig"
+OUT = figure_directory()
 
 WIDTH = 6.0
 CELL = 0.148

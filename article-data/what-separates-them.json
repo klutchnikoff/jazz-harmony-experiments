@@ -1,8 +1,21 @@
 {
+  "displayed_contribution_count": 4,
   "gap_dorian": "-0.022",
   "gap_ionian": "0.021",
-  "row_IIm7": "6.3 & 0.8 & 0.34 & -0.019",
-  "row_IMmaj7": "4.1 & 0.1 & 0.52 & -0.021",
-  "row_VM": "1.9 & 12.3 & 0.50 & 0.052",
-  "row_VM7": "12.2 & 15.1 & 0.68 & 0.020"
+  "row_IIm7_contribution": "-0.019",
+  "row_IIm7_cp": "0.8",
+  "row_IIm7_jazz": "6.3",
+  "row_IIm7_reading": "0.34",
+  "row_IMmaj7_contribution": "-0.021",
+  "row_IMmaj7_cp": "0.1",
+  "row_IMmaj7_jazz": "4.1",
+  "row_IMmaj7_reading": "0.52",
+  "row_VM7_contribution": "0.020",
+  "row_VM7_cp": "15.1",
+  "row_VM7_jazz": "12.2",
+  "row_VM7_reading": "0.68",
+  "row_VM_contribution": "0.052",
+  "row_VM_cp": "12.3",
+  "row_VM_jazz": "1.9",
+  "row_VM_reading": "0.50"
 }

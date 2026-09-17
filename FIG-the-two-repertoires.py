@@ -21,8 +21,6 @@ implementation of the analysis.
 
 Run:  LSA_LOCAL=1 .venv/bin/python FIG-the-two-repertoires.py
 """
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -33,13 +31,12 @@ from article_analysis import (
     profile_permutation_test,
     profile_stream,
 )
-from article_setup import cache_directory
+from article_setup import cache_directory, figure_directory
 from chord_scale import MODES, SYSTEM
 from corpus import key_exact, load_corpus
 from figure_style import save_article_figure
 
-HERE = Path(__file__).resolve().parent
-OUT = HERE.parents[0] / "TeX" / "fig"
+OUT = figure_directory()
 JAZZ, CP = "#1f4e79", "#a3c4dc"
 FADED = 0.38          # modes whose difference does not clear the test
 PERMUTATIONS = 20_000

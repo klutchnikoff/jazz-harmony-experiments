@@ -1,4 +1,12 @@
 {
-  "c7_in_c": "Mixolydian with share 0.52",
-  "c7_in_f": "Ionian with share 0.68"
+  "c7_in_c_mode": "Mixolydian",
+  "c7_in_c_share": "0.52",
+  "c7_in_f_intervals": [
+    2,
+    5,
+    7,
+    11
+  ],
+  "c7_in_f_mode": "Ionian",
+  "c7_in_f_share": "0.68"
 }

@@ -152,16 +152,18 @@ def main():
           f"against a floor of {floor:.4f}")
 
     export("the-order-used-below", {
-        "order": f"p={ORDER}",
+        "order": f"{ORDER:.2f}",
         # two decimals, as Section 4.2 states the same medians
         "concentration_one": f"{c_one:.2f}",
         "concentration_chosen": f"{c_chosen:.2f}",
         "concentration_zero": f"{c_zero:.2f}",
         "separation_floor": f"{floor:.3f}",
         "separation_peak": f"{measure(vocab, peak)[1]:.3f}",
+        "separation_peak_order": f"{peak:.1f}",
         "crossing": f"{hi:.3f}",
-        "unique_maxima": "Twenty-eight have a unique largest coordinate",
-        "paired_at_maximum": "fifteen of them",
+        "unique_maxima": unique_maxima,
+        "paired_at_maximum": paired_at_maximum,
+        "paired_count": len(paired),
         "triad_mixolydian": f"{share['Mixolydian']:.2f}",
         "triad_lydian_ionian": f"{share['Lydian']:.2f}",
         "triad_octatonic": f"{share['octatonic']:.2f}",

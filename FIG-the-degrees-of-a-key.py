@@ -18,20 +18,19 @@ a triad leaving too many modes containing it.
 
 Run:  LSA_LOCAL=1 .venv/bin/python FIG-the-degrees-of-a-key.py
 """
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import PowerNorm
 from matplotlib.patches import Rectangle
 
 from article_analysis import TonicModalReader
+from article_setup import figure_directory
 from chord_scale import SYSTEM, MODES
 from figure_style import HEATMAP_CMAP, save_article_figure
 
 ORDER = 0.15
 READER = TonicModalReader(SYSTEM, ORDER)
-OUT = Path(__file__).resolve().parents[1] / "TeX" / "fig"
+OUT = figure_directory()
 SOLE, TIED = "#c0392b", "#e08214"
 
 MAJ7, MI7, DOM, HALF = (4, 7, 11), (3, 7, 10), (4, 7, 10), (3, 6, 10)

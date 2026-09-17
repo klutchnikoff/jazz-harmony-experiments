@@ -108,6 +108,7 @@ def main():
               "IMmaj7": (0, kind_of(4, 7, 11)),
               "VM7": (7, kind_of(4, 7, 10)),
               "IIm7": (2, kind_of(3, 7, 10))}
+    values["displayed_contribution_count"] = len(wanted)
     ionian, dorian = MODES.index("Ionian"), MODES.index("Dorian")
 
     ionian_contribution = {d: delta[d] * reading[d][ionian] for d in names}
@@ -127,9 +128,10 @@ def main():
     for name, d in wanted.items():
         assert d in names, f"the degree {name} is no longer in the corpus"
         assert label(*d) == name, f"{name} is not what label() calls it"
-        values[f"row_{name}"] = (
-            f"{100 * share['J'][d]:.1f} & {100 * share['C'][d]:.1f} & "
-            f"{reading[d][ionian]:.2f} & {ionian_contribution[d]:.3f}")
+        values[f"row_{name}_jazz"] = f"{100 * share['J'][d]:.1f}"
+        values[f"row_{name}_cp"] = f"{100 * share['C'][d]:.1f}"
+        values[f"row_{name}_reading"] = f"{reading[d][ionian]:.2f}"
+        values[f"row_{name}_contribution"] = f"{ionian_contribution[d]:.3f}"
 
     values["gap_ionian"] = f"{gap[ionian]:.3f}"
     values["gap_dorian"] = f"{gap[dorian]:.3f}"

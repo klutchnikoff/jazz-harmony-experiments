@@ -102,6 +102,14 @@ def main():
     print(f"\nthe five borrowed degrees read Aeolian from {lo:.3f} to {hi:.3f}")
 
     export("borrowed-degrees", {
+        "major_chromatic_count": len(BORROWED) + len(ELSEWHERE),
+        "minor_alteration_count": len(ALTERED),
+        "borrowed_count": len(BORROWED),
+        "other_major_count": len(ELSEWHERE),
+        "dorian_alteration_count": sum(want == "Dorian"
+                                       for _, _, _, want in ALTERED),
+        "omitted_reference_count": sum(want is None
+                                       for _, _, _, want in ALTERED),
         "aeolian_lowest": f"{lo:.2f}",
         "aeolian_highest": f"{hi:.2f}",
     })

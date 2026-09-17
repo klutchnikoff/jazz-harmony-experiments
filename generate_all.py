@@ -39,6 +39,8 @@ SCRIPTS = [
     "ROBUST-p-sensitivity.py",
     "ART-the-p-sensitivity.py",
     "ART-what-separates-them.py",
+    "publish_article_outputs.py",
+    "record_run_manifest.py",
     "check_article_numbers.py",
 ]
 

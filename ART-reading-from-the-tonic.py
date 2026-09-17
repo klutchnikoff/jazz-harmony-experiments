@@ -85,8 +85,11 @@ def main():
         print(f"{C7[0]:6s} {NOTES[tonic]:3s}  "
               f"{'{' + ','.join(NOTES[c] for c in whole) + '}':26s} "
               f"{str(intervals):16s} {MODES[top]} {pr[top]:.3f}")
-        values[f"c7_in_{NOTES[tonic].lower()}"] = \
-            f"{MODES[top]} with share {pr[top]:.2f}"
+        stem = f"c7_in_{NOTES[tonic].lower()}"
+        values[f"{stem}_mode"] = MODES[top]
+        values[f"{stem}_share"] = f"{pr[top]:.2f}"
+        if tonic == 5:
+            values[f"{stem}_intervals"] = intervals
 
     export("reading-from-the-tonic", values)
 

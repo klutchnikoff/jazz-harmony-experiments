@@ -123,11 +123,8 @@ def main():
     away = audit["away_share"].dropna()
     far = audit["far_share"].dropna()
 
-    # the manuscript spells small numbers out, as it does everywhere in prose
-    words = {5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}
     values = {
-        "median_keys":
-            f"median of {words[int(keys.median())]} annotated key spans",
+        "median_keys": int(keys.median()),
         "single_key": f"{100 * (keys == 1).mean():.1f}",
         "away_share": f"{100 * away.mean():.1f}",
         "far_share": f"{100 * far.mean():.1f}",

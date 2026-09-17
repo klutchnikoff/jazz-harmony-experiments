@@ -323,14 +323,19 @@ def main():
 
     minor_share = {c: 100 * len(W[(c, "minor")]) / len(pooled[c]) for c in "JC"}
     export("the-two-repertoires", {
-        # the checker reads the manuscript with LaTeX digit grouping stripped
-        "jazz_kept":
-            f"{len(pooled['J'])} of the {n_jazz} jazz lead sheets",
-        "cp_kept":
-            f"{len(pooled['C'])} of the {len(songs) - n_jazz} "
-            "common-practice works",
-        "weimar_before": f"{disagree_all} of {shared}",
-        "weimar_after": f"{disagree_kept} of {kept}",
+        "jazz_kept": len(pooled["J"]),
+        "cp_kept": len(pooled["C"]),
+        "permutations": PERMUTATIONS,
+        "key_type_comparisons": KEY_TYPE_TESTS,
+        "familywise_alpha_percent": "5",
+        "jazz_major_kept": len(W[("J", "major")]),
+        "cp_major_kept": len(W[("C", "major")]),
+        "jazz_minor_kept": len(W[("J", "minor")]),
+        "cp_minor_kept": len(W[("C", "minor")]),
+        "weimar_before_disagree": disagree_all,
+        "weimar_before_total": shared,
+        "weimar_after_disagree": disagree_kept,
+        "weimar_after_total": kept,
         "gap_pooled": f"{gaps['pooled']:.3f}",
         "gap_major": f"{gaps['major']:.3f}",
         "gap_minor": f"{gaps['minor']:.3f}",
@@ -340,23 +345,20 @@ def main():
         "size_std_major": f"{standardised['major'][1]:.3f}",
         "size_raw_minor": f"{standardised['minor'][0]:.3f}",
         "size_std_minor": f"{standardised['minor'][1]:.3f}",
-        "size_test":
-            f"both Monte Carlo p-values are "
-            f"{KEY_TYPE_TESTS}/{PERMUTATIONS + 1}",
-        "size_support_major_cp": "sizes 2 to 6",
-        "size_support_major_jazz": "sizes 2 to 8",
-        "size_support_minor_cp": "sizes 1 to 5",
-        "size_support_minor_jazz": "sizes 2 to 7",
-        "size_excluded_minor":
-            f"accounts for only {100 * excluded['minor']:.3f}",
-        "retained_major":
-            f"{english_list(SIDES['major']['cp'])} in the common-practice "
-            f"direction, and {english_list(SIDES['major']['jazz'])} in the "
-            "jazz direction",
-        "retained_minor":
-            f"{english_list(SIDES['minor']['cp'])} in the common-practice "
-            f"direction, and {english_list(SIDES['minor']['jazz'])} in the "
-            "jazz direction",
+        "size_test_p": f"{KEY_TYPE_TESTS}/{PERMUTATIONS + 1}",
+        "size_support_major_cp_min": 2,
+        "size_support_major_cp_max": 6,
+        "size_support_major_jazz_min": 2,
+        "size_support_major_jazz_max": 8,
+        "size_support_minor_cp_min": 1,
+        "size_support_minor_cp_max": 5,
+        "size_support_minor_jazz_min": 2,
+        "size_support_minor_jazz_max": 7,
+        "size_excluded_minor": f"{100 * excluded['minor']:.3f}",
+        "retained_major_cp": SIDES["major"]["cp"],
+        "retained_major_jazz": SIDES["major"]["jazz"],
+        "retained_minor_cp": SIDES["minor"]["cp"],
+        "retained_minor_jazz": SIDES["minor"]["jazz"],
         "permutation_floor": f"{KEY_TYPE_TESTS}/{PERMUTATIONS + 1}",
     })
 

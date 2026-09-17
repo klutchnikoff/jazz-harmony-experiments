@@ -1,9 +1,13 @@
 {
-  "collapsed_classes": "Four classes collapse",
-  "phi0_distinct": "only 25 distinct values",
+  "altered_dominant_class_size": 4,
+  "augmented_class_size": 3,
+  "collapsed_classes": 4,
+  "phi0_distinct": 25,
   "phi0_median": "0.56",
-  "phi0_point_mass": "the 10 kinds a single mode weighs",
+  "phi0_point_mass": 10,
   "phi1_largest": "0.288",
   "phi1_median": "0.19",
+  "point_mass_classes": 3,
+  "two_mode_class_support": 2,
   "uniform": "0.111"
 }

@@ -90,18 +90,18 @@ def tally(degrees, form, home):
 
 def main():
     print(f"\n{'':9s} {'triad':>7s} {'sixth':>7s} {'seventh':>8s}")
-    counts = {}
+    degree_counts = {}
     for label, degrees, home in (("C major", MAJOR, "Ionian"),
                                  ("A minor", MINOR, "Aeolian")):
         row = {f: tally(degrees, f, home) for f in FORMS}
-        counts[label] = row
+        degree_counts[label] = row
         print(f"{label:9s} " + " ".join(f"{row[f]:>7d}"
                                         for f in ("triad", "sixth", "seventh")))
 
-    assert counts["C major"]["seventh"] == 5, "the major sevenths no longer read 5 of 7"
-    assert counts["A minor"]["seventh"] == 5, "the minor sevenths no longer read 5 of 7"
-    assert counts["C major"]["triad"] == 3 and counts["A minor"]["triad"] == 3
-    assert counts["C major"]["sixth"] == 3 and counts["A minor"]["sixth"] == 2
+    assert degree_counts["C major"]["seventh"] == 5, "the major sevenths no longer read 5 of 7"
+    assert degree_counts["A minor"]["seventh"] == 5, "the minor sevenths no longer read 5 of 7"
+    assert degree_counts["C major"]["triad"] == 3 and degree_counts["A minor"]["triad"] == 3
+    assert degree_counts["C major"]["sixth"] == 3 and degree_counts["A minor"]["sixth"] == 2
 
     for key, degrees in (("C major", MAJOR), ("A minor", MINOR)):
         for degree_label, offset, quality in degrees:
@@ -130,6 +130,13 @@ def main():
         "common-practice one, which is what Section 5.2 rests on")
 
     export("the-degrees-of-a-key", {
+        "degree_count": len(MAJOR),
+        "major_seventh_unique": degree_counts["C major"]["seventh"],
+        "minor_seventh_unique": degree_counts["A minor"]["seventh"],
+        "major_triad_unique": degree_counts["C major"]["triad"],
+        "minor_triad_unique": degree_counts["A minor"]["triad"],
+        "major_sixth_unique": degree_counts["C major"]["sixth"],
+        "minor_sixth_unique": degree_counts["A minor"]["sixth"],
         "supertonic_tie": f"{share:.2f}",
         "jazz_sevenths": f"{seventh['jazz']:.1f}",
         "cp_sevenths": f"{seventh['cp']:.1f}",

@@ -1,17 +1,16 @@
 """Article data for Section 2.3, "A vocabulary fixed by rule".
 
-Produces every number that subsection states, and nothing else, including the
-table: the kinds of each family, their token counts, and their share.
-
-Small integers are deliberately not exported.  check_article_numbers.py searches
-the manuscript for each value, and a number like 5 or 32 occurs in too many
-places for finding it to prove anything; only figures distinctive enough for the
-search to mean something are exported.
+Produces every value that subsection states, including its rule parameters and
+the table.  Small integers remain unambiguous because the manuscript references
+export keys directly rather than searching for their rendered values.
 
 Run:  LSA_LOCAL=1 .venv/bin/python ART-a-vocabulary-fixed-by-rule.py
 """
 from article_data import export
-from vocabulary import build, corpus_counts, family, name, FAMILIES, COVERAGE, one_step
+from corpus import MIN_CHORDS
+from vocabulary import (
+    build, corpus_counts, family, name, FAMILIES, COVERAGE, MIN_SONGS, one_step,
+)
 
 
 def families_at(coverage, tokens, in_songs):
@@ -49,9 +48,14 @@ def main():
 
     kept = sum(tokens["jazz"][k] for k in vocab)
     values = {
-        # a phrase, not a bare count: "32" alone would be found anywhere
-        "vocabulary_size": f"{len(vocab)} kinds",
-        "dominant_seventh": ",".join(str(x) for x in dominant),
+        "vocabulary_size": len(vocab),
+        "minimum_chords": MIN_CHORDS,
+        "coverage_target": f"{COVERAGE:.2f}",
+        "coverage_target_percent": f"{100 * COVERAGE:.0f}",
+        "diagnostic_coverage_percent": "90",
+        "family_count": len(FAMILIES),
+        "minimum_completion_songs": MIN_SONGS,
+        "dominant_seventh": list(dominant),
         "vocabulary_tokens": kept,
         # exported as the article writes them: a trailing zero is significant
         "jazz_coverage": f"{100 * kept / jazz_total:.2f}",
@@ -63,7 +67,9 @@ def main():
         ks = [k for k in sorted(vocab, key=lambda k: -tokens["jazz"][k])
               if family(k) == fam]
         n = sum(tokens["jazz"][k] for k in ks)
-        values[f"tokens_{fam.lower().replace('-', '_')}"] = n
+        stem = fam.lower().replace("-", "_")
+        values[f"tokens_{stem}"] = n
+        values[f"share_{stem}"] = f"{100 * n / jazz_total:.2f}"
         print(f"{fam:12s} {len(ks):3d} {n:9,d} {n/jazz_total:7.2%}   "
               + ", ".join(name(k) for k in ks))
     print(f"{'total':12s} {len(vocab):3d} {kept:9,d} {kept/jazz_total:7.2%}")
@@ -78,9 +84,6 @@ def main():
     # Section 2.3 says a 90 % cut would leave no suspended kind, and that
     # thirteen of the thirty-two come from the completion.  Both were computed
     # here and neither was exported, so neither was checked.
-    spelled_small = {13: "thirteen", 19: "Nineteen", 20: "Twenty",
-                     21: "Twenty-one"}
-
     # Section 2.3 makes both claims of the segment itself, before completion,
     # which is the stronger form: at 95 % the twenty kinds already hold every
     # family, at 90 % the thirteen hold no suspended one.
@@ -98,10 +101,9 @@ def main():
         "a 90 % segment now holds a suspended kind, which Section 2.3 denies")
     assert set(FAMILIES) == {family(k) for k in segment(COVERAGE)}, (
         "the 95 % segment no longer holds every family")
-    values["segment_size"] = f"{spelled_small[len(segment(COVERAGE))]} kinds meet"
-    values["segment_at_ninety"] = f"{spelled_small[len(segment(0.90))]} kinds and no"
-    spelled = {12: "Twelve", 13: "Thirteen", 14: "Fourteen", 15: "Fifteen"}
-    values["from_completion"] = f"{spelled[len(added)]} of the thirty-two"
+    values["segment_size"] = len(segment(COVERAGE))
+    values["segment_at_ninety"] = len(segment(0.90))
+    values["completion_size"] = len(added)
 
     export("a-vocabulary-fixed-by-rule", values)
 

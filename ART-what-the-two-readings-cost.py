@@ -86,12 +86,22 @@ def main():
         "forces k = k'")
 
     point_mass = int((top0 > 1 - 1e-9).sum())
-    words = {1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six"}
+    collapsed_by_members = {frozenset(ks): key for key, ks in collapsed}
+    altered = next(ks for ks in collapsed_by_members
+                   if "7#9" in ks)
+    augmented = next(ks for ks in collapsed_by_members
+                     if "aug7" in ks)
+    two_mode = next(key for key, ks in collapsed
+                    if set(ks) == {"maj7(13)", "maj9"})
     export("what-the-two-readings-cost", {
-        # phrases, not bare integers: 32 and 10 occur throughout the manuscript
-        "phi0_distinct": f"only {distinct(phi0)} distinct values",
-        "phi0_point_mass": f"the {point_mass} kinds a single mode weighs",
-        "collapsed_classes": f"{words[len(collapsed)]} classes collapse",
+        "phi0_distinct": distinct(phi0),
+        "phi0_point_mass": point_mass,
+        "collapsed_classes": len(collapsed),
+        "point_mass_classes": int(sum(np.count_nonzero(key) == 1
+                                      for key, _ in collapsed)),
+        "altered_dominant_class_size": len(altered),
+        "augmented_class_size": len(augmented),
+        "two_mode_class_support": int(np.count_nonzero(two_mode)),
         # the bound deserves its third decimal, the medians do not
         "phi1_largest": f"{top1.max():.3f}",
         "phi1_median": f"{np.median(top1):.2f}",

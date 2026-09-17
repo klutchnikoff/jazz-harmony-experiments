@@ -1,24 +1,52 @@
 {
-  "cp_kept": "371 of the 434 common-practice works",
+  "cp_kept": 371,
+  "cp_major_kept": 234,
+  "cp_minor_kept": 137,
+  "familywise_alpha_percent": "5",
   "gap_major": "0.093",
   "gap_minor": "0.233",
   "gap_pooled": "0.181",
-  "jazz_kept": "1921 of the 2829 jazz lead sheets",
+  "jazz_kept": 1921,
+  "jazz_major_kept": 1799,
+  "jazz_minor_kept": 122,
+  "key_type_comparisons": 2,
   "minor_share_cp": "37",
   "minor_share_jazz": "6",
   "permutation_floor": "2/20001",
-  "retained_major": "Lydian and Ionian in the common-practice direction, and Mixolydian and Dorian in the jazz direction",
-  "retained_minor": "Lydian and Ionian in the common-practice direction, and Dorian, Aeolian, and Phrygian in the jazz direction",
-  "size_excluded_minor": "accounts for only 0.017",
+  "permutations": 20000,
+  "retained_major_cp": [
+    "Lydian",
+    "Ionian"
+  ],
+  "retained_major_jazz": [
+    "Mixolydian",
+    "Dorian"
+  ],
+  "retained_minor_cp": [
+    "Lydian",
+    "Ionian"
+  ],
+  "retained_minor_jazz": [
+    "Dorian",
+    "Aeolian",
+    "Phrygian"
+  ],
+  "size_excluded_minor": "0.017",
   "size_raw_major": "0.102",
   "size_raw_minor": "0.277",
   "size_std_major": "0.154",
   "size_std_minor": "0.356",
-  "size_support_major_cp": "sizes 2 to 6",
-  "size_support_major_jazz": "sizes 2 to 8",
-  "size_support_minor_cp": "sizes 1 to 5",
-  "size_support_minor_jazz": "sizes 2 to 7",
-  "size_test": "both Monte Carlo p-values are 2/20001",
-  "weimar_after": "1 of 60",
-  "weimar_before": "11 of 114"
+  "size_support_major_cp_max": 6,
+  "size_support_major_cp_min": 2,
+  "size_support_major_jazz_max": 8,
+  "size_support_major_jazz_min": 2,
+  "size_support_minor_cp_max": 5,
+  "size_support_minor_cp_min": 1,
+  "size_support_minor_jazz_max": 7,
+  "size_support_minor_jazz_min": 2,
+  "size_test_p": "2/20001",
+  "weimar_after_disagree": 1,
+  "weimar_after_total": 60,
+  "weimar_before_disagree": 11,
+  "weimar_before_total": 114
 }

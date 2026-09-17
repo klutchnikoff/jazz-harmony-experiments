@@ -23,6 +23,7 @@ from fractions import Fraction
 
 import numpy as np
 
+import article_setup  # noqa: F401  (select package source before package imports)
 from article_data import export
 from leadsheetanalyser.constants import (
     W_DIATONIC, W_MESSIAEN, DIATONIC_MODE_NAMES, MESSIAEN_MODE_NAMES)
@@ -36,7 +37,7 @@ C_DIATONIC = set(PITCH_CLASSES.values())
 
 
 def integer_form(row):
-    """(denominator, comma-separated numerators) for a row of weights."""
+    """(denominator, integer numerators) for a row of weights."""
     fractions = [Fraction(x).limit_denominator(10 ** 6) for x in row]
     denominator = 1
     for f in fractions:
@@ -47,7 +48,7 @@ def integer_form(row):
     if common > 1:
         numerators = [n // common for n in numerators]
         denominator //= common
-    return denominator, ",".join(str(n) for n in numerators)
+    return int(denominator), numerators
 
 
 def assert_brightness_order(rows):
@@ -152,22 +153,36 @@ def main():
     assert_floors(rows)
     assert_diatonic_coverage(rows)
 
-    words = {7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven"}
     values = {
-        "diatonic_centres": "F, C, G, D, A, E, and B",
-        "diatonic_modes_first": "Lydian, Ionian, Mixolydian, Dorian",
-        "diatonic_modes_last": "Aeolian, Phrygian",
-        "system_size": f"{words[len(rows)]} modes",
+        "diatonic_centres": CENTRES,
+        "diatonic_modes": BRIGHT,
+        "diatonic_mode_count": len(BRIGHT),
+        "symmetric_mode_count": len(rows) - len(BRIGHT),
+        "system_size": len(rows),
         "floor_diatonic": "1/10",
         "floor_whole_tone": "1/5",
         "floor_octatonic": "1/7",
+        "diatonic_support_size": int(np.count_nonzero(rows[0][1])),
+        "whole_tone_support_size": int(np.count_nonzero(rows[-2][1])),
+        "octatonic_support_size": int(np.count_nonzero(rows[-1][1])),
     }
     print(f"\n{'mode':12s} {'1/d':>6s}  weights")
     for name, row in rows:
         d, vector = integer_form(row)
         assert abs(row.sum() - 1) < 1e-12, f"{name} does not sum to one"
-        values[f"weights_{name.lower().replace('-', '_')}"] = vector
-        print(f"{name:12s} {'1/' + str(d):>6s}  ({vector})")
+        stem = name.lower().replace("-", "_")
+        values[f"weights_{stem}"] = vector
+        values[f"denominator_{stem}"] = d
+        print(f"{name:12s} {'1/' + str(d):>6s}  "
+              f"({','.join(map(str, vector))})")
+
+    for name, row in rows[-2:]:
+        actual = {0} | {i + 1 for i, weight in enumerate(row) if weight > 0}
+        orbit = {
+            tuple(sorted((pitch + shift) % 12 for pitch in actual))
+            for shift in range(12)
+        }
+        values[f"transpositions_{name.lower().replace('-', '_')}"] = len(orbit)
 
     export("the-system-used-below", values)
 

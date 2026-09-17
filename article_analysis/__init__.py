@@ -1,5 +1,7 @@
 """Reusable analysis primitives shared by the article's executable scripts."""
 
+import article_setup  # noqa: F401  (select package source before submodule imports)
+
 from .key_metadata import load_annotated_modes
 from .representations import (
     TonicModalReader,

@@ -107,7 +107,11 @@ def brightness(P):
 
 def main():
     W = profiles()
-    values = {}
+    values = {
+        "bootstrap_replicates": BOOTSTRAP,
+        "bootstrap_level_percent": "95",
+        "key_type_comparisons": KEY_TYPE_TESTS,
+    }
 
     for kappa in ("major", "minor"):
         J, C = W[("J", kappa)], W[("C", kappa)]
@@ -189,10 +193,9 @@ def main():
         values[f"dominance_{kappa}"] = f"{Delta[:DIATONIC - 1].min():.4f}"
         values[f"dominance_p_{kappa}"] = p_text
         values[f"contrast_{kappa}"] = f"{contrast:.3f}"
-        values[f"interval_{kappa}"] = f"[{lo:.3f}, {hi:.3f}]"
-        qualifier = ("pooled within-repertoire standard deviations"
-                     if kappa == "major" else "such standard deviations")
-        values[f"effect_{kappa}"] = f"{effect:.2f} {qualifier}"
+        values[f"interval_{kappa}_low"] = f"{lo:.3f}"
+        values[f"interval_{kappa}_high"] = f"{hi:.3f}"
+        values[f"effect_{kappa}"] = f"{effect:.2f}"
 
     export("the-brightness-contrast", values)
 
