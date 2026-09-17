@@ -1,0 +1,16 @@
+{
+  "concentration_chosen": "0.48",
+  "concentration_one": "0.19",
+  "concentration_zero": "0.56",
+  "crossing": "0.139",
+  "order": "0.15",
+  "paired_at_maximum": 15,
+  "paired_count": 16,
+  "separation_floor": "0.089",
+  "separation_peak": "0.173",
+  "separation_peak_order": "0.3",
+  "triad_lydian_ionian": "0.25",
+  "triad_mixolydian": "0.31",
+  "triad_octatonic": "0.18",
+  "unique_maxima": 28
+}

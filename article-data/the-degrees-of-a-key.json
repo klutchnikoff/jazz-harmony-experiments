@@ -1,0 +1,12 @@
+{
+  "cp_sevenths": "25.2",
+  "degree_count": 7,
+  "jazz_sevenths": "61.8",
+  "major_seventh_unique": 5,
+  "major_sixth_unique": 3,
+  "major_triad_unique": 3,
+  "minor_seventh_unique": 5,
+  "minor_sixth_unique": 2,
+  "minor_triad_unique": 3,
+  "supertonic_tie": "0.34"
+}

@@ -1,0 +1,17 @@
+{
+  "bootstrap_level_percent": "95",
+  "bootstrap_replicates": 20000,
+  "contrast_major": "0.125",
+  "contrast_minor": "0.383",
+  "dominance_major": "0.0065",
+  "dominance_minor": "0.0067",
+  "dominance_p_major": "2/20001",
+  "dominance_p_minor": "0.0340",
+  "effect_major": "0.38",
+  "effect_minor": "1.08",
+  "interval_major_high": "0.163",
+  "interval_major_low": "0.086",
+  "interval_minor_high": "0.470",
+  "interval_minor_low": "0.297",
+  "key_type_comparisons": 2
+}

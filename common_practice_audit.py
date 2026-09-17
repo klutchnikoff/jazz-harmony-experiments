@@ -26,29 +26,13 @@ dominant is being read, for half its length, against a tonic it has left.
 Run:  python common_practice_audit.py
 """
 import jams
-import numpy as np
 import pandas as pd
-from music21 import chord as m21chord
-from music21 import stream
 
 from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
-from corpus_distances import (
-    DATA, era, map_chord, normalised_tonic, _annotation, SUBDOMINANT_PULL,
+from corpus import (
+    DATA, era, map_chord, collection_tonic, _annotation, SUBDOMINANT_PULL,
 )
-
-def estimate_key(prog):
-    """The estimator of key_audit.py, inlined: that module is a script."""
-    s = stream.Stream()
-    for c in prog:
-        if c is None or c[0] is None or any(x is None for x in c[1:12]):
-            continue
-        root = int(c[0])
-        pcs = sorted({root % 12} | {(root + i) % 12 for i in range(1, 12) if c[i]})
-        s.append(m21chord.Chord(pcs))
-    if len(s) < 3:
-        return None
-    k = s.analyze("key")
-    return k.tonic.pitchClass, k.mode, float(k.correlationCoefficient)
+from leadsheetanalyser.key_estimation import estimate_key_from_chords
 
 
 OUT = cache_directory() / "common_practice_audit.csv"
@@ -74,12 +58,14 @@ def build_audit():
         keys = _annotation(j, "key_mode")
         if chords is None or keys is None or not len(keys.data):
             continue
-        opening = normalised_tonic(*str(keys.data[0].value).split(":")[:2]) \
+        opening = collection_tonic(*str(keys.data[0].value).split(":")[:2]) \
             if ":" in str(keys.data[0].value) else None
         if opening is None:
             continue
 
-        # What the loader transposes, and what the annotations say it should be.
+        # Collections, as this audit has always compared: the loader now
+        # transposes by the annotated tonic instead, so the two are no longer
+        # the same question.  Revisit when Section 6 needs this measure.
         total = away = 0.0
         far = 0.0
         for obs in keys.data:
@@ -87,7 +73,7 @@ def build_audit():
             d = float(obs.duration or 0.0)
             if d <= 0 or ":" not in label:
                 continue
-            col = normalised_tonic(*label.split(":")[:2])
+            col = collection_tonic(*label.split(":")[:2])
             if col is None:
                 continue
             total += d
@@ -104,7 +90,7 @@ def build_audit():
                 progression.append(map_chord(obs.value))
             except Exception:
                 progression.append(None)
-        est = estimate_key([c for c in progression if c is not None])
+        est = estimate_key_from_chords(progression)
         if est is None:
             continue
         est_col = (est[0] + 3) % 12 if est[1] == "minor" else est[0]
@@ -171,41 +157,3 @@ print("\n-- both tests together")
 strict = (audit["gap"] == 0) & (audit["away_share"] <= 0.25)
 print(f"  corroborated opening AND at most a quarter of the duration away: "
       f"{strict.sum()} of {len(audit)} ({strict.mean():.1%})")
-
-# ---------------------------------------------------------------------------
-# What the single-key transposition costs the geometry (Section 8.2).
-#
-# Reading a work under a tonic it has left spreads its roots over many degrees,
-# which records it as chromatic.  Splitting the common-practice side at the
-# median of away_share isolates that effect on the axis-2 separation.
-from corpus_distances import load_corpus, distance_matrix, key_reliable
-
-songs, titles, song_ids, styles, n_jazz = load_corpus()
-reliable = np.concatenate([key_reliable(song_ids[:n_jazz]),
-                           np.ones(len(songs) - n_jazz, bool)])
-keep = np.flatnonzero(reliable)
-D = distance_matrix(songs, "duration")[np.ix_(keep, keep)]
-is_jazz = styles[keep] == "jazz"
-
-n = len(D)
-centring = np.eye(n) - np.ones((n, n)) / n
-gram = -0.5 * centring @ (D ** 2) @ centring
-values, vectors = np.linalg.eigh(gram)
-order = np.argsort(values)[::-1]
-X = vectors[:, order[:2]] * np.sqrt(np.clip(values[order[:2]], 0, None))
-axis2, sd = X[:, 1], X[:, 1].std()
-
-cp_rows = audit.set_index("id").reindex(np.array(song_ids)[keep][~is_jazz])
-away = cp_rows["away_share"].to_numpy()
-cp_idx = np.flatnonzero(~is_jazz)
-jazz_mean = axis2[is_jazz].mean()
-
-print("\n-- effect of the single-key transposition on the axis-2 separation")
-print(f"  corr(away share, axis 2) = "
-      f"{np.corrcoef(away, axis2[cp_idx])[0, 1]:+.3f}   (jazz lies on the + side)")
-median = np.median(away)
-for label, sel in [("all common-practice works", np.ones(len(away), bool)),
-                   ("half closest to opening key", away <= median),
-                   ("half furthest from it", away > median)]:
-    gap = abs(jazz_mean - axis2[cp_idx[sel]].mean()) / sd
-    print(f"    {label:30s} n={sel.sum():4d}   gap = {gap:.2f} sd")

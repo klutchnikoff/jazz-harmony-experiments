@@ -27,13 +27,12 @@ which for our purposes is agreement.
 
 Run:  python key_audit.py
 """
-import numpy as np
 import pandas as pd
-from music21 import chord as m21chord
-from music21 import stream
 
 from article_setup import DATA_ROOT, cache_directory, cache_is_fresh
+from corpus import classify
 from leadsheetanalyser.constants import NOTE_TO_PC
+from leadsheetanalyser.key_estimation import estimate_key_from_chords
 
 OUT = cache_directory() / "key_audit.csv"
 OUT.parent.mkdir(exist_ok=True)
@@ -50,35 +49,6 @@ def parse_annotation(key_field):
     return pc, mode
 
 
-def estimate_key(prog):
-    s = stream.Stream()
-    for c in prog:
-        if c is None or c[0] is None or any(x is None for x in c[1:12]):
-            continue
-        root = int(c[0])
-        pcs = sorted({root % 12} | {(root + i) % 12 for i in range(1, 12) if c[i]})
-        s.append(m21chord.Chord(pcs))
-    if len(s) < 3:
-        return None
-    k = s.analyze("key")
-    return k.tonic.pitchClass, k.mode, float(k.correlationCoefficient)
-
-
-def classify(annot, est):
-    (apc, amode), (epc, emode, _) = annot, est
-    if apc == epc and amode == emode:
-        return "exact"
-    if emode == "minor" and amode == "major" and apc == (epc + 3) % 12:
-        return "relative"          # annotation is the relative major
-    if emode == "major" and amode == "minor" and apc == (epc + 9) % 12:
-        return "relative"          # annotation is the relative minor
-    if apc == epc:
-        return "parallel"
-    if (apc - epc) % 12 in (5, 7):
-        return "fifth"
-    return "other"
-
-
 SOURCE = DATA_ROOT / "music_realbook.pkl"
 
 if cache_is_fresh(OUT, SOURCE, __file__):
@@ -92,7 +62,7 @@ else:
         if n % 200 == 0:
             print(f"  song {n}/{len(df)}", flush=True)
         annot = parse_annotation(row["key"])
-        est = estimate_key(row["chord_progression"])
+        est = estimate_key_from_chords(row["chord_progression"])
         if est is None:
             continue
         category = "no-annot" if annot is None else classify(annot, est)
@@ -118,13 +88,13 @@ print(f"  written to {OUT}")
 
 # ---------------------------------------------------------------------------
 # Collection-level agreement: the figures quoted in Section 8.1.
-from corpus_distances import key_reliable, normalised_tonic, SUBDOMINANT_PULL
+from corpus import key_reliable, collection_tonic, SUBDOMINANT_PULL
 
 
 def annotated_collection(label):
     if not isinstance(label, str) or ":" not in label:
         return None
-    return normalised_tonic(label.split(":")[0], label.split(":")[1])
+    return collection_tonic(label.split(":")[0], label.split(":")[1])
 
 
 gaps = []

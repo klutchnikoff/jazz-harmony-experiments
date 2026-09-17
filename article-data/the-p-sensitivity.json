@@ -1,0 +1,18 @@
+{
+  "bootstrap_reference": 0,
+  "cut_count": 6,
+  "grid_end": "0.20",
+  "grid_start": "0.14",
+  "grid_step": "0.01",
+  "major_cut_upper": "0.0158",
+  "max_t_major_count": 4,
+  "max_t_minor_count": 5,
+  "minor_cut_lower": "0.0257",
+  "minor_cut_upper": "0.0547",
+  "minor_first_nonsignificant": "0.0512",
+  "minor_first_nonsignificant_order": "0.19",
+  "minor_last_significant": "0.0470",
+  "minor_last_significant_order": "0.18",
+  "order_count": 7,
+  "significance_percent": "5"
+}

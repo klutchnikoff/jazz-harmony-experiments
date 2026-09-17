@@ -15,13 +15,10 @@ two public repositories must be able to produce them without owning the
 
 Which `leadsheetanalyser` is imported
 ------------------------------------
-By default, the one pinned in `pyproject.toml` and installed by `pdm install`.
-That is the release the article cites, so it is what a reader gets.
-
-Set `LSA_LOCAL=1` to import the sibling source tree instead.  Use it only while
-editing the package -- the results then come from an unpublished working tree.
-Every run prints which of the two it resolved, because the previous version of
-this file injected the source tree unconditionally and nothing said so.
+The project dependency is the sibling 0.3 source tree.  PDM installs that tree
+into the experiment environment; `LSA_LOCAL=1` additionally puts the live tree
+first on `sys.path`, which is convenient while editing the package.  Every run
+prints which form it resolved and rejects any version other than 0.3.0.
 """
 
 from pathlib import Path
@@ -37,8 +34,10 @@ DATA_ROOT = PACKAGE_ROOT / "data"
 
 RESULTS_ROOT = ARTICLE_ROOT / "results"
 CACHE_ROOT = RESULTS_ROOT / "cache"
+FIGURE_ROOT = RESULTS_ROOT / "figures"
 
 USE_LOCAL_PACKAGE = os.environ.get("LSA_LOCAL") == "1"
+EXPECTED_PACKAGE_VERSION = "0.3.0"
 
 if USE_LOCAL_PACKAGE and str(PACKAGE_ROOT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_ROOT))
@@ -58,8 +57,14 @@ def _announce_package() -> None:
             "  Install the pinned release:  pdm install\n"
             "  Or use a sibling clone:      LSA_LOCAL=1 pdm run python <script>.py"
         )
-    origin = "local source tree" if USE_LOCAL_PACKAGE else "pinned release"
+    origin = ("live sibling source tree" if USE_LOCAL_PACKAGE
+              else "PDM-installed sibling source")
     version = getattr(leadsheetanalyser, "__version__", "unknown")
+    if version != EXPECTED_PACKAGE_VERSION:
+        sys.exit(
+            "incompatible leadsheetanalyser version: "
+            f"expected {EXPECTED_PACKAGE_VERSION}, found {version}"
+        )
     print(f"[setup] leadsheetanalyser {version} ({origin})", file=sys.stderr)
     print(f"[setup] data    {DATA_ROOT}", file=sys.stderr)
     print(f"[setup] results {RESULTS_ROOT}", file=sys.stderr)
@@ -110,6 +115,16 @@ def output_directory() -> Path:
         directory = Path(sys.argv[sys.argv.index("--out") + 1]).resolve()
     else:
         directory = RESULTS_ROOT
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory
+
+
+def figure_directory() -> Path:
+    """Canonical figure build directory, overridable with ``--out DIR``."""
+    if "--out" in sys.argv:
+        directory = Path(sys.argv[sys.argv.index("--out") + 1]).resolve()
+    else:
+        directory = FIGURE_ROOT
     directory.mkdir(parents=True, exist_ok=True)
     return directory
 
